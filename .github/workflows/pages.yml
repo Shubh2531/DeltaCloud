@@ -18,7 +18,15 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: npm install
-      - run: npm run build
+      - run: |
+          set +e
+          npm run build > build.log 2>&1
+          code=$?
+          if [ $code -ne 0 ]; then
+            grep -vE '^\s*$' build.log | head -25 | while IFS= read -r l; do echo "::error::${l:0:300}"; done
+          fi
+          cat build.log
+          exit $code
         env:
           CI: "false"
           # Set REACT_APP_API_BASE_URL under Settings > Secrets and variables > Actions > Variables
