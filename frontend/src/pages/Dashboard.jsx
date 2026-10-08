@@ -5,14 +5,12 @@ import { usePaperAccount } from "../hooks/usePaperAccount";
 import FeedBadge from "../components/FeedBadge";
 import PriceList from "../components/PriceList";
 import TradingViewChart from "../components/TradingViewChart";
-import MarketIntelligenceOrb from "../components/MarketIntelligenceOrb";
+import OrbCard from "../components/OrbCard";
 import Disclaimer from "../components/Disclaimer";
 import { useNews } from "../hooks/useNews";
 import MarketPulse from "../components/MarketPulse";
 import { Story } from "./News";
 import { usd, signedUsd, pct, tone } from "../lib/format";
-
-const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -21,10 +19,6 @@ export default function Dashboard() {
   const news = useNews({ limit: 40 });
 
   const firstName = (user?.name || "").split(" ")[0] || "there";
-  const btcChange = prices.BTCUSDT?.P;
-  // The orb dims when Bitcoin is down on the day and moves faster the bigger the move.
-  const delta = Number.isFinite(btcChange) ? clamp(btcChange / 5, -1, 1) : 0;
-  const energy = Number.isFinite(btcChange) ? clamp(Math.abs(btcChange) / 5, 0.15, 1) : 0.3;
 
   return (
     <div className="page">
@@ -72,12 +66,7 @@ export default function Dashboard() {
         </div>
 
         <div style={{ display: "grid", gap: 18 }}>
-          <div className="card" style={{ display: "grid", justifyItems: "center", gap: 6 }}>
-            <MarketIntelligenceOrb size={200} marketDelta={delta} volatility={energy} />
-            <div className="small muted" style={{ textAlign: "center" }}>
-              The orb dims when Bitcoin is down on the day and speeds up with bigger moves.
-            </div>
-          </div>
+          <OrbCard />
           <div className="card">
             <h2>Markets</h2>
             <PriceList />

@@ -1,0 +1,21 @@
+.dorb { display: grid; gap: 14px; overflow: hidden; }
+.dorb-stage { position: relative; width: 100%; max-width: 420px; aspect-ratio: 1; margin: 0 auto; touch-action: pan-y; cursor: grab; }
+.dorb-stage:active { cursor: grabbing; }
+.dorb-stage canvas { display: block; width: 100% !important; height: 100% !important; }
+.dorb-fallback { position: absolute; inset: 14%; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(0,255,200,.55), rgba(91,124,250,.35) 45%, rgba(6,10,20,0) 72%); filter: blur(2px); }
+.dorb-head h3 { margin: 0; font-size: 22px; letter-spacing: -0.01em; }
+.dorb-head p { margin: 4px 0 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.dorb-meters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.dorb-meter { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+.dorb-meter b { color: var(--text); font-size: 15px; font-weight: 600; }
+.dorb-bar { position: relative; height: 6px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; }
+.dorb-bar i { position: absolute; top: 0; bottom: 0; border-radius: 6px; transition: all .6s ease; }
+.dorb-tip { padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(0,229,180,.25); background: rgba(0,229,180,.06); font-size: 14px; line-height: 1.5; }
+.dorb-tip b { display: block; margin-bottom: 2px; font-size: 13px; color: var(--accent, #00e5b4); }
+.dorb-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.dorb-chip { padding: 5px 10px; border-radius: 999px; font-size: 12.5px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); }
+.dorb-chip.up { color: #4ade80; border-color: rgba(74,222,128,.35); }
+.dorb-chip.down { color: #ff6b81; border-color: rgba(255,107,129,.35); }
+.dorb-foot { margin: 0; font-size: 12px; color: var(--faint, #7c8aa5); line-height: 1.5; }
+@media (max-width: 520px) { .dorb-meters { grid-template-columns: 1fr; } }
