@@ -7,6 +7,8 @@ import PriceList from "../components/PriceList";
 import TradingViewChart from "../components/TradingViewChart";
 import MarketIntelligenceOrb from "../components/MarketIntelligenceOrb";
 import Disclaimer from "../components/Disclaimer";
+import { useNews } from "../hooks/useNews";
+import { Story } from "./News";
 import { usd, signedUsd, pct, tone } from "../lib/format";
 
 const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
@@ -15,6 +17,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { prices } = useMarket();
   const { account, error } = usePaperAccount();
+  const news = useNews({ limit: 4 });
 
   const firstName = (user?.name || "").split(" ")[0] || "there";
   const btcChange = prices.BTCUSDT?.P;
@@ -75,6 +78,19 @@ export default function Dashboard() {
           <div className="card">
             <h2>Markets</h2>
             <PriceList />
+          </div>
+          <div className="card">
+            <div className="page-head" style={{ marginBottom: 6 }}>
+              <h2 style={{ marginBottom: 0 }}>Top stories</h2>
+              <Link to="/news" className="btn btn-sm">All news</Link>
+            </div>
+            {news.items.length === 0 ? (
+              <div className="small muted">{news.error || (news.loading ? "Loading stories…" : "No stories yet. Check back soon.")}</div>
+            ) : (
+              news.items.map((it) => (
+                <Story key={it.link} item={it} compact />
+              ))
+            )}
           </div>
         </div>
       </div>

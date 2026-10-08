@@ -12,6 +12,8 @@ import { verifyAccess } from "./services/tokens.js";
 import { feed } from "./services/feed.js";
 import authRoutes from "./routes/auth.routes.js";
 import marketRoutes from "./routes/market.routes.js";
+import newsRoutes from "./routes/news.routes.js";
+import { startNews, stopNews } from "./services/news.js";
 import paperRoutes from "./routes/paper.routes.js";
 
 const app = express();
@@ -52,6 +54,7 @@ app.get("/health", (req, res) => {
 });
 app.use("/api/auth", authRoutes);
 app.use("/api/market", marketRoutes);
+app.use("/api/news", newsRoutes);
 app.use("/api/paper", paperRoutes);
 
 app.use("/api", (req, res) => res.status(404).json({ ok: false, message: "Not found." }));
@@ -98,6 +101,7 @@ async function start() {
     console.log("✅ MongoDB connected");
     await verifyMail();
     feed.start();
+    startNews();
     server.listen(config.port, () => {
       console.log(`🚀 DeltaCloud API on port ${config.port} (${config.isProd ? "production" : "development"})`);
     });
@@ -109,6 +113,7 @@ async function start() {
 
 function shutdown() {
   feed.stop();
+  stopNews();
   io.close();
   server.close(() => mongoose.connection.close().finally(() => process.exit(0)));
   setTimeout(() => process.exit(1), 5000).unref();

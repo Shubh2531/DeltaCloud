@@ -11,6 +11,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Trading = lazy(() => import("./pages/Trading"));
 const Portfolio = lazy(() => import("./pages/Portfolio"));
+const News = lazy(() => import("./pages/News"));
 const Insights = lazy(() => import("./pages/Insights"));
 const Compounding = lazy(() => import("./pages/Compounding"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/trading" element={<Trading />} />
         <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/news" element={<News />} />
         <Route path="/insights" element={<Insights />} />
         <Route path="/ai-advisor" element={<Navigate to="/insights" replace />} />
         <Route path="/compounding" element={<Compounding />} />

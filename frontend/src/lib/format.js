@@ -32,3 +32,13 @@ export const floorTo = (x, digits = 8) => Math.floor(x * 10 ** digits) / 10 ** d
 
 export const timeFmt = (iso) =>
   new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+
+export const timeAgo = (iso, now = Date.now()) => {
+  const m = Math.max(0, Math.round((now - Date.parse(iso)) / 60000));
+  if (m < 1) return "just now";
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h} hour${h === 1 ? "" : "s"} ago`;
+  const d = Math.round(h / 24);
+  return `${d} day${d === 1 ? "" : "s"} ago`;
+};

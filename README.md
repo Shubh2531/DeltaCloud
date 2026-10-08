@@ -25,7 +25,7 @@ cd backend
 cp .env.example .env      # fill in MONGO_URI and two different 32+ char secrets
 npm install
 npm run dev               # http://localhost:8080
-npm test                  # 18 unit tests
+npm test                  # 25 unit tests
 ```
 
 With no SMTP configured, codes are printed in the backend console, and (non-production only) returned to the UI when `DEV_RETURN_OTP=true`.
@@ -69,6 +69,15 @@ GitHub Pages serves static files only, so the site has two parts: the **frontend
 5. Push to `main` (or run the *Deploy site to GitHub Pages* workflow). The site appears at `https://<you>.github.io/<repo>/`.
 
 CI (`.github/workflows/ci.yml`) runs the backend tests and a frontend build on every push. Never commit `.env`; it is git-ignored.
+
+## Delta News
+
+The backend reads public RSS feeds from central banks and regulators (Federal Reserve, SEC, ECB) and from news outlets (CNBC, MarketWatch, CoinDesk, Cointelegraph, BBC, The Guardian, The New York Times, Al Jazeera). It refreshes every 5 minutes, keeps only market-relevant stories, merges the same story reported by several outlets, tags the markets and topics it mentions, and ranks by relevance, freshness, number of outlets and whether the source is official. Tone is a simple word count of the headline and is labelled as such.
+
+- Only headlines, a short snippet and a link back to the publisher are stored or shown, always credited. Do not copy full articles.
+- A feed that is down is skipped. If all are unreachable the last good list stays.
+- Edit `SOURCES` in `backend/src/services/news.js` to add or remove feeds. Check each publisher's terms before adding one, and add a licensed data provider before charging for news.
+- Endpoint: `GET /api/news?topic=&symbol=&q=&sort=top|latest&limit=`.
 
 ## Devices
 

@@ -20,6 +20,14 @@ const PATHS = {
     </>
   ),
   insights: <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" />,
+  news: (
+    <>
+      <path d="M4 5h13v14H6a2 2 0 0 1-2-2z" />
+      <path d="M17 9h3v8a2 2 0 0 1-2 2" />
+      <path d="M8 9h5" />
+      <path d="M8 13h5" />
+    </>
+  ),
   growth: (
     <>
       <path d="M3 20h18" />
