@@ -6,6 +6,7 @@ import FeedBadge from "../components/FeedBadge";
 import PriceList from "../components/PriceList";
 import TradingViewChart from "../components/TradingViewChart";
 import OrbCard from "../components/OrbCard";
+import PacingCard from "../components/PacingCard";
 import Disclaimer from "../components/Disclaimer";
 import { useNews } from "../hooks/useNews";
 import MarketPulse from "../components/MarketPulse";
@@ -57,12 +58,15 @@ export default function Dashboard() {
       <MarketPulse prices={prices} stories={news.items} />
 
       <div className="cols-2">
-        <div className="card">
-          <div className="page-head" style={{ marginBottom: 12 }}>
-            <h2 style={{ marginBottom: 0 }}>Bitcoin</h2>
-            <Link to="/trading" className="btn btn-sm">Open trading</Link>
+        <div style={{ display: "grid", gap: 18 }}>
+          <div className="card">
+            <div className="page-head" style={{ marginBottom: 12 }}>
+              <h2 style={{ marginBottom: 0 }}>Bitcoin</h2>
+              <Link to="/trading" className="btn btn-sm">Open trading</Link>
+            </div>
+            <TradingViewChart symbol="BINANCE:BTCUSDT" height="clamp(320px, 50vh, 520px)" />
           </div>
-          <TradingViewChart symbol="BINANCE:BTCUSDT" height="clamp(320px, 50vh, 520px)" />
+          <PacingCard account={account} />
         </div>
 
         <div style={{ display: "grid", gap: 18 }}>

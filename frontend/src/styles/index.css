@@ -245,3 +245,13 @@ table.table { width: 100%; border-collapse: collapse; font-size: 14px; }
 /* Phones with a notch or camera cut-out: keep the top bars out from under the status area. */
 .ticker { padding-top: env(safe-area-inset-top); }
 .splash { padding-top: env(safe-area-inset-top); }
+
+/* ---------- Position pacing / leverage result strips ---------- */
+.pace-row { display: grid; gap: 8px; margin-bottom: 4px; }
+.pace-select { max-width: 280px; }
+.pace-result { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 14px 16px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--line); }
+.pace-bar { position: relative; height: 8px; border-radius: 999px; background: var(--panel-2); overflow: hidden; }
+.pace-bar i { position: absolute; inset: 0 auto 0 0; display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #5b7cfa); border-radius: 999px; transition: width .4s ease; }
+.pace-note { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+.pace-note b { display: block; margin-bottom: 4px; font-size: 13px; color: var(--text); }
+@media (max-width: 560px) { .pace-result { grid-template-columns: 1fr; } }

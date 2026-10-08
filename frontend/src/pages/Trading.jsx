@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { MARKETS, marketById } from "../lib/symbols";
 import { usePaperAccount } from "../hooks/usePaperAccount";
 import FeedBadge from "../components/FeedBadge";
 import TradingViewChart from "../components/TradingViewChart";
 import TradePanel from "../components/TradePanel";
+import LeveragePanel from "../components/LeveragePanel";
+import LeveragePositions from "../components/LeveragePositions";
 import Disclaimer from "../components/Disclaimer";
 import { priceFmt, qtyFmt, usd, signedUsd, timeFmt, tone } from "../lib/format";
 
@@ -11,6 +14,7 @@ export default function Trading() {
   const [params, setParams] = useSearchParams();
   const market = marketById(params.get("symbol"));
   const { account, setAccount, error } = usePaperAccount();
+  const [mode, setMode] = useState("spot"); // "spot" | "leverage"
 
   const orders = account?.orders.slice(0, 10) ?? [];
 
@@ -40,10 +44,25 @@ export default function Trading() {
 
       {error && <div className="notice error" role="alert">{error}</div>}
 
+      <div className="seg" role="group" aria-label="Order type">
+        <button type="button" className={`btn${mode === "spot" ? " on" : ""}`} aria-pressed={mode === "spot"} onClick={() => setMode("spot")}>
+          Spot
+        </button>
+        <button type="button" className={`btn${mode === "leverage" ? " on" : ""}`} aria-pressed={mode === "leverage"} onClick={() => setMode("leverage")}>
+          Leverage
+        </button>
+      </div>
+
       <div className="cols-2">
         <TradingViewChart symbol={market.tv} height="clamp(320px, 62vh, 640px)" />
-        <TradePanel symbol={market.id} account={account} onAccount={setAccount} />
+        {mode === "spot" ? (
+          <TradePanel symbol={market.id} account={account} onAccount={setAccount} />
+        ) : (
+          <LeveragePanel symbol={market.id} account={account} onAccount={setAccount} />
+        )}
       </div>
+
+      {mode === "leverage" && <LeveragePositions account={account} onAccount={setAccount} />}
 
       <div className="card">
         <h2>Recent practice orders</h2>

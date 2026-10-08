@@ -5,17 +5,19 @@ import { usePaperAccount } from "../hooks/usePaperAccount";
 import { marketById } from "../lib/symbols";
 import FeedBadge from "../components/FeedBadge";
 import Disclaimer from "../components/Disclaimer";
+import LeveragePositions from "../components/LeveragePositions";
 import { usd, priceFmt, qtyFmt, signedUsd, pct, tone, timeFmt } from "../lib/format";
 
 const COLORS = ["#94a3b8", "#f2a900", "#627eea", "#14f195", "#5b7cfa", "#ff6b9d", "#c084fc"];
 
 export default function Portfolio() {
-  const { account, loading, error } = usePaperAccount();
+  const { account, setAccount, loading, error } = usePaperAccount();
 
   const slices = account
     ? [
         { label: "Cash", value: account.cash },
         ...account.positions.map((p) => ({ label: marketById(p.symbol).base, value: p.value })),
+        ...(account.leverageEquity > 0 ? [{ label: "Leverage margin", value: account.leverageEquity }] : []),
       ].filter((s) => s.value > 0)
     : [];
 
@@ -128,6 +130,46 @@ export default function Portfolio() {
               )}
             </div>
           </div>
+
+          <LeveragePositions account={account} onAccount={setAccount} />
+
+          {account.leverageHistory.length > 0 && (
+            <div className="card">
+              <h2>Leverage history</h2>
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Closed</th>
+                      <th>Market</th>
+                      <th>Side</th>
+                      <th className="num">Leverage</th>
+                      <th className="num">Entry</th>
+                      <th className="num">Close</th>
+                      <th className="num">Result</th>
+                      <th>How</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {account.leverageHistory.map((h) => (
+                      <tr key={h.id + h.closedAt}>
+                        <td>{timeFmt(h.closedAt)}</td>
+                        <td>{marketById(h.symbol).base}</td>
+                        <td className={h.side === "LONG" ? "pos" : "neg"}>{h.side === "LONG" ? "Long" : "Short"}</td>
+                        <td className="num tnum">{h.leverage}×</td>
+                        <td className="num tnum">{priceFmt(h.entryPrice)}</td>
+                        <td className="num tnum">{priceFmt(h.closePrice)}</td>
+                        <td className={`num tnum ${tone(h.pnl)}`}>{signedUsd(h.pnl)}</td>
+                        <td className={h.reason === "liquidated" ? "neg" : "muted"}>
+                          {h.reason === "liquidated" ? "Liquidated" : "Closed"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           <div className="card">
             <h2>Order history</h2>

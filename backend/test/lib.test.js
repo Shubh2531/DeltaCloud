@@ -2,6 +2,15 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { executeOrder, TradeError } from "../src/lib/paperMath.js";
+import {
+  openLeverage,
+  closeLeverage,
+  settleLiquidations,
+  liquidationPrice,
+  positionPnl,
+  settlementValue,
+  TradeError as LeverageError,
+} from "../src/lib/leverageMath.js";
 import { computeInsights, MIN_SAMPLES, sma, pctChange } from "../src/lib/indicators.js";
 import { normalizeEmail, cleanName, validatePassword, validateDob, parseQty, isOtp } from "../src/lib/validators.js";
 import { generateOtp } from "../src/lib/code.js";
@@ -189,4 +198,92 @@ test("symbol check rejects prototype keys and junk", () => {
   assert.equal(isSymbol("constructor"), false);
   assert.equal(isSymbol(null), false);
   assert.equal(SYMBOLS.length, 6);
+});
+
+/* ---------- Leverage: isolated margin, can never lose more than it put up ---------- */
+
+test("liquidation price is below entry for LONG, above entry for SHORT", () => {
+  const longLiq = liquidationPrice(100, 10, "LONG");
+  const shortLiq = liquidationPrice(100, 10, "SHORT");
+  assert.ok(longLiq < 100 && longLiq > 85, String(longLiq)); // ~90, slightly above a flat 1/leverage
+  assert.ok(shortLiq > 100 && shortLiq < 115, String(shortLiq));
+  // Higher leverage liquidates on a smaller move.
+  assert.ok(liquidationPrice(100, 50, "LONG") > liquidationPrice(100, 10, "LONG"));
+});
+
+test("opening a leveraged position debits exactly the margin, not the full notional", () => {
+  const account = { cash: 1000, leveragePositions: [] };
+  const r = openLeverage(account, { symbol: "BTCUSDT", side: "LONG", marginUsd: 200, leverage: 5, price: 100, nextId: "1" });
+  assert.equal(r.cash, 800);
+  assert.equal(r.leveragePositions.length, 1);
+  const p = r.leveragePositions[0];
+  assert.equal(p.margin, 200);
+  assert.equal(p.qty, 10); // (200 * 5) / 100
+  assert.ok(p.liqPrice < 100);
+});
+
+test("opening a position rejects bad leverage, bad side, zero amount and insufficient cash", () => {
+  const account = { cash: 100, leveragePositions: [] };
+  const open = (patch) =>
+    openLeverage(account, { symbol: "BTCUSDT", side: "LONG", marginUsd: 50, leverage: 10, price: 100, nextId: "1", ...patch });
+  assert.throws(() => open({ leverage: 3 }), LeverageError);
+  assert.throws(() => open({ side: "UP" }), LeverageError);
+  assert.throws(() => open({ marginUsd: 0 }), LeverageError);
+  assert.throws(() => open({ marginUsd: -5 }), LeverageError);
+  assert.throws(() => open({ marginUsd: 1000 }), LeverageError); // more than cash
+  assert.throws(() => open({ price: 0 }), LeverageError);
+});
+
+test("closing a profitable LONG pays out margin plus profit", () => {
+  const opened = openLeverage(
+    { cash: 1000, leveragePositions: [] },
+    { symbol: "BTCUSDT", side: "LONG", marginUsd: 100, leverage: 10, price: 100, nextId: "1" }
+  );
+  // qty = 10, price rises 10% to 110 -> profit = 10 * 10 = 100
+  const r = closeLeverage({ cash: opened.cash, leveragePositions: opened.leveragePositions }, { id: "1", price: 110 });
+  assert.equal(r.leveragePositions.length, 0);
+  assert.equal(r.closed.reason, "closed");
+  assert.equal(r.closed.pnl, 100);
+  assert.equal(r.cash, opened.cash + 200); // 100 margin back + 100 profit
+});
+
+test("closing a losing position never pays back more loss than the margin put up", () => {
+  const opened = openLeverage(
+    { cash: 1000, leveragePositions: [] },
+    { symbol: "BTCUSDT", side: "LONG", marginUsd: 100, leverage: 10, price: 100, nextId: "1" }
+  );
+  // A catastrophic gap straight to $1 (far past liquidation) must never create negative cash.
+  const r = closeLeverage({ cash: opened.cash, leveragePositions: opened.leveragePositions }, { id: "1", price: 1 });
+  assert.equal(r.closed.reason, "liquidated");
+  assert.ok(r.cash >= opened.cash, "cash never drops below what it was after the margin was already taken");
+  assert.equal(r.closed.pnl, -100); // lost exactly the margin, nothing more
+});
+
+test("settleLiquidations force-closes only positions the market has already wiped out", () => {
+  const account = { cash: 1000, leveragePositions: [] };
+  const a = openLeverage(account, { symbol: "BTCUSDT", side: "LONG", marginUsd: 100, leverage: 10, price: 100, nextId: "1" });
+  const b = openLeverage(
+    { cash: a.cash, leveragePositions: a.leveragePositions },
+    { symbol: "ETHUSDT", side: "SHORT", marginUsd: 100, leverage: 5, price: 2000, nextId: "2" }
+  );
+
+  // BTC crashes past its LONG liquidation level; ETH barely moves and stays open.
+  const r = settleLiquidations({ cash: b.cash, leveragePositions: b.leveragePositions }, { BTCUSDT: 50, ETHUSDT: 2010 });
+  assert.ok(r, "a liquidation should have been detected");
+  assert.equal(r.leveragePositions.length, 1);
+  assert.equal(r.leveragePositions[0].symbol, "ETHUSDT");
+  assert.equal(r.liquidated.length, 1);
+  assert.equal(r.liquidated[0].symbol, "BTCUSDT");
+  assert.ok(r.cash >= b.cash, "the wiped position never pulls cash below what it was");
+
+  const none = settleLiquidations({ cash: b.cash, leveragePositions: b.leveragePositions }, { BTCUSDT: 100, ETHUSDT: 2000 });
+  assert.equal(none, null, "nothing to settle when no liquidation level has been crossed");
+});
+
+test("settlementValue and positionPnl agree for a SHORT position", () => {
+  const position = { side: "SHORT", qty: 2, entryPrice: 100, margin: 50 };
+  assert.equal(positionPnl(position, 90), 20); // price fell 10, short gains 10 * qty 2
+  assert.equal(settlementValue(position, 90), 70); // margin 50 + profit 20
+  assert.equal(positionPnl(position, 150), -100); // price rose 50, short loses 50 * qty 2
+  assert.equal(settlementValue(position, 150), 0); // loss exceeds margin, clamped at 0
 });

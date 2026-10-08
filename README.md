@@ -12,7 +12,10 @@ dc/
 
 - **Sign-in:** email + password, then a 6-digit emailed code. Access token (15 min) and rotating refresh token (7 days, stored hashed, max 5 per user).
 - **Prices:** polls Binance.US every 2s, streams to the app over socket.io. If the feed fails it falls back to clearly labelled simulated prices. The UI always shows **Live** or **Simulated**. A price is only tradeable if under 15 seconds old.
-- **Practice trading:** server-authoritative. Spot only, no leverage, no shorting. The server sets the price; the client cannot.
+- **Practice trading:** server-authoritative. The server sets the price; the client cannot.
+  - **Spot:** buy and sell at the live price, no shorting.
+  - **Leverage:** long or short at 2×–50×, isolated margin only — a position can never lose more than the margin put into it, and cash can never go negative. A position auto-closes ("liquidated") if the price crosses its liquidation level; see `backend/src/lib/leverageMath.js`.
+- **Pace your trades:** a position-size helper on the dashboard that compares a spot slice of cash with the same slice used as leveraged margin, with no advice and no order placed.
 - **Insights:** rule-based readings of recent movement (short vs long average, change over the window, range). No buy/sell wording, always with a disclaimer.
 - **Growth Lab:** compound-growth calculator.
 
@@ -25,7 +28,7 @@ cd backend
 cp .env.example .env      # fill in MONGO_URI and two different 32+ char secrets
 npm install
 npm run dev               # http://localhost:8080
-npm test                  # 25 unit tests
+npm test                  # 33 unit tests
 ```
 
 With no SMTP configured, codes are printed in the backend console, and (non-production only) returned to the UI when `DEV_RETURN_OTP=true`.

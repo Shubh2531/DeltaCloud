@@ -22,11 +22,26 @@ export function enrich(account, prices) {
     };
   });
   const invested = positions.reduce((sum, p) => sum + p.value, 0);
-  const equity = account.cash + invested;
+
+  // Re-price open leverage positions against the live socket feed between account refreshes.
+  // Equity is clamped at 0 here too: a position can never owe back more than its margin.
+  const leveragePositions = (account.leveragePositions || []).map((p) => {
+    const live = prices?.[p.symbol]?.c;
+    const priced = Number.isFinite(live);
+    const mark = priced ? live : p.markPrice;
+    const diff = p.side === "LONG" ? mark - p.entryPrice : p.entryPrice - mark;
+    const pnl = diff * p.qty;
+    return { ...p, markPrice: mark, priced, pnl, pnlPct: p.margin ? (pnl / p.margin) * 100 : 0, equity: Math.max(0, p.margin + pnl) };
+  });
+  const leverageEquity = leveragePositions.reduce((sum, p) => sum + p.equity, 0);
+
+  const equity = account.cash + invested + leverageEquity;
   const pnl = equity - account.startingCash;
   return {
     ...account,
     positions,
+    leveragePositions,
+    leverageEquity,
     invested,
     equity,
     pnl,
