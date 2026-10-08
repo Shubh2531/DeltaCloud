@@ -4,7 +4,7 @@
   --display: "Bricolage Grotesque", Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   min-height: 100vh; color: var(--text);
   background: radial-gradient(900px 520px at 80% 0%, rgba(0, 229, 180, 0.10), transparent 70%) no-repeat, var(--ink);
-  padding-top: env(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top); overflow-x: clip;
 }
 .lp h1, .lp h2, .lp h3 { font-family: var(--display); letter-spacing: -0.02em; }
 .lp a { text-decoration: none; }
@@ -150,3 +150,54 @@
 }
 @media (max-width: 560px) { .lp-stage { height: 360px; } .lp-l-fill { left: 0; } }
 @media (prefers-reduced-motion: reduce) { .lp-stage { animation: none; transition: none; } }
+
+/* ---------- Aurora, facts, ring, showcase ---------- */
+.lp-aurora { position: absolute; inset: 0; z-index: -2; pointer-events: none; filter: blur(60px); opacity: .75;
+  background:
+    radial-gradient(40% 50% at 20% 30%, rgba(0, 229, 180, 0.22), transparent 70%),
+    radial-gradient(35% 45% at 80% 20%, rgba(91, 124, 250, 0.26), transparent 70%),
+    radial-gradient(30% 40% at 60% 85%, rgba(168, 85, 247, 0.16), transparent 70%);
+  animation: lpAurora 18s ease-in-out infinite alternate; }
+@keyframes lpAurora { to { transform: translate3d(3%, 2%, 0) scale(1.08); } }
+
+.lp-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; width: min(1100px, calc(100% - 2 * max(20px, 5vw))); margin: 0 auto;
+  border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--line); }
+.lp-facts > div { background: var(--ink); padding: 26px 18px; display: grid; gap: 4px; }
+.lp-facts b { font-family: var(--display); font-size: clamp(26px, 3.4vw, 40px); letter-spacing: -0.02em; }
+.lp-facts span { color: var(--muted); font-size: 14px; line-height: 1.4; }
+
+.lp-ring-section { overflow: hidden; }
+.lp-ring-section, .lp-hero, .lp section { max-width: 100%; }
+.lp-ring { height: 260px; perspective: 1500px; display: grid; place-items: center; margin-top: 8px; }
+.lp-ring-track { position: relative; width: 190px; height: 190px; transform-style: preserve-3d; animation: lpSpin 36s linear infinite; }
+.lp-ring-item { position: absolute; inset: 0; padding: 18px; border-radius: 18px; display: grid; align-content: start; gap: 2px;
+  border: 1px solid rgba(255,255,255,.14); background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+  backdrop-filter: blur(8px); box-shadow: 0 20px 50px rgba(0,0,0,.45);
+  transform: rotateY(calc(var(--i) * 60deg)) translateZ(330px); }
+.lp-ring-item b { font-family: var(--display); font-size: 28px; }
+.lp-ring-item span { color: var(--muted); font-size: 14px; }
+.lp-ring-item svg { width: 100%; margin-top: 14px; }
+@keyframes lpSpin { to { transform: rotateY(-360deg); } }
+
+.lp-show { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; perspective: 1400px; }
+.lp-panel { padding: 22px; border-radius: 18px; border: 1px solid rgba(255,255,255,.12); display: grid; gap: 10px; align-content: start;
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.025)); box-shadow: 0 30px 70px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.1);
+  transition: transform .5s cubic-bezier(.2,.7,.2,1), border-color .3s; transform: rotateY(var(--tilt, 0deg)); }
+.lp-panel:nth-child(1) { --tilt: 8deg; } .lp-panel:nth-child(3) { --tilt: -8deg; }
+.lp-panel:hover { transform: rotateY(0) translateY(-6px); border-color: rgba(0,229,180,.4); }
+.lp-panel h3 { font-size: 18px; }
+.lp-panel p { margin: 0; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.04); font-size: 15px; line-height: 1.4; color: #cbd5e1; }
+.lp-panel small { color: var(--faint); }
+.lp-gauge { width: 100%; max-width: 220px; margin: 0 auto; }
+.lp-panel .lp-mini { padding: 4px 2px; }
+
+@media (max-width: 900px) {
+  .lp-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lp-ring { height: 220px; }
+  .lp-ring-track { width: 150px; height: 150px; }
+  .lp-ring-item { transform: rotateY(calc(var(--i) * 60deg)) translateZ(240px); padding: 14px; }
+  .lp-ring-item b { font-size: 22px; }
+  .lp-show { grid-template-columns: 1fr; }
+  .lp-panel { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .lp-aurora, .lp-ring-track { animation: none; } }

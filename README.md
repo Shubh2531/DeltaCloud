@@ -1,6 +1,6 @@
 # DeltaCloud
 
-A practice-trading and market-learning app. Real or simulated prices, a $10,000 play-money account, plain-language market readings, and a growth calculator. No real money moves anywhere.
+A practice-trading and market-learning app. Real or simulated prices, a $10,000 play-money account, plain-language market readings, and a growth calculator.
 
 ```
 dc/
@@ -116,7 +116,7 @@ Account data wiped by `localStorage.clear()`; a hard-coded `000000` code; regist
 
 ## Deliberately not included yet
 
-Order book, depth chart, terminal, assets, news and auto-pilot pages. They depended on fake or unsourced data. Add them back once there are real data sources. Real-money features (brokerage, payments, wallet) stay out until legal and compliance groundwork exists.
+Order book, depth chart, terminal, assets, news and auto-pilot pages. They depended on fake or unsourced data. Add them back once there are real data sources. Account-linked features are planned for a later release.
 
 ## Verification status
 
