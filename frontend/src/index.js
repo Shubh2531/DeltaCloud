@@ -19,3 +19,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </BrowserRouter>
   </React.StrictMode>
 );
+
+// Make the site installable and keep the shell available offline.
+// Skipped inside the native iOS/Android wrapper, which already ships its own files.
+if ("serviceWorker" in navigator && /^https?:$/.test(window.location.protocol) && !window.Capacitor?.isNativePlatform?.()) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register(`${process.env.PUBLIC_URL || ""}/sw.js`).catch(() => {});
+  });
+}

@@ -70,6 +70,12 @@ GitHub Pages serves static files only, so the site has two parts: the **frontend
 
 CI (`.github/workflows/ci.yml`) runs the backend tests and a frontend build on every push. Never commit `.env`; it is git-ignored.
 
+## Devices
+
+- **Any browser:** the site is responsive from phone to widescreen. It works in Safari, Chrome, Edge and Firefox on iPhone, iPad, Android, Mac, Windows and Linux.
+- **Install as an app (no store needed):** it is a Progressive Web App. iPhone/iPad: Safari, Share, Add to Home Screen. Android: Chrome menu, Install app. Mac, Windows, Linux: Chrome or Edge, install icon in the address bar. The service worker (`frontend/public/sw.js`) keeps the shell available offline; pages always load fresh from the network first.
+- **App Store / Google Play:** the Capacitor project is configured (`com.deltacloud.app`). iOS builds need a Mac with Xcode and an Apple Developer account. Android builds need Android Studio and a Google Play developer account.
+
 ## Mobile (Capacitor)
 
 `localhost` does not work from a phone. Deploy the backend over HTTPS, set `REACT_APP_API_BASE_URL` to it, then:
