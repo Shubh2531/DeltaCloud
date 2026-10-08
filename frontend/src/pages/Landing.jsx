@@ -1,4 +1,6 @@
+import { useRef } from "react";
 import { Link } from "react-router-dom";
+import WaveField from "../components/WaveField";
 import "../styles/landing.css";
 
 const FEATURES = [
@@ -43,6 +45,54 @@ function Spark() {
   );
 }
 
+// A layered stack of cards in 3D that leans toward the pointer. All values are illustrations.
+function Scene() {
+  const box = useRef(null);
+  const frame = useRef(0);
+  const move = (e) => {
+    if (e.pointerType === "touch") return;
+    const r = box.current.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    cancelAnimationFrame(frame.current);
+    frame.current = requestAnimationFrame(() => {
+      box.current.style.setProperty("--ry", `${(-16 + x * 14).toFixed(2)}deg`);
+      box.current.style.setProperty("--rx", `${(8 - y * 10).toFixed(2)}deg`);
+    });
+  };
+  const reset = () => {
+    box.current.style.removeProperty("--ry");
+    box.current.style.removeProperty("--rx");
+  };
+  return (
+    <figure className="lp-scene" ref={box} onPointerMove={move} onPointerLeave={reset} aria-label="Example of the DeltaCloud practice account screen">
+      <div className="lp-stage">
+        <div className="lp-layer lp-l-main">
+          <div className="lp-card-top"><span>Practice account</span><span className="lp-pill">Example</span></div>
+          <div className="lp-card-value">$10,482.17</div>
+          <div className="lp-card-delta">+$482.17 since you started</div>
+          <Spark />
+          <div className="lp-card-rows">
+            <div><span>Cash</span><b>$6,240.00</b></div>
+            <div><span>Invested</span><b>$4,242.17</b></div>
+          </div>
+        </div>
+        <div className="lp-layer lp-l-mkts">
+          <div className="lp-mini-h">Markets</div>
+          <div className="lp-mini"><b>BTC</b><i className="pos">+1.2%</i></div>
+          <div className="lp-mini"><b>ETH</b><i className="pos">+0.8%</i></div>
+          <div className="lp-mini"><b>SOL</b><i className="neg">−0.4%</i></div>
+        </div>
+        <div className="lp-layer lp-l-fill">
+          <span className="lp-tick" aria-hidden="true">✓</span>
+          <div><b>Practice order filled</b><span>Bought 0.05 BTC</span></div>
+        </div>
+      </div>
+      <figcaption>An illustration of the screen, not real results.</figcaption>
+    </figure>
+  );
+}
+
 export default function Landing() {
   return (
     <div className="lp">
@@ -60,6 +110,7 @@ export default function Landing() {
 
       <main>
         <section className="lp-hero">
+          <WaveField />
           <div className="lp-hero-copy">
             <h1>Learn how markets move before you risk a dollar.</h1>
             <p className="lp-lede">
@@ -72,20 +123,7 @@ export default function Landing() {
             <p className="lp-fine">Free to use. Practice only. Not investment advice.</p>
           </div>
 
-          <figure className="lp-card" aria-label="Example practice account">
-            <div className="lp-card-top">
-              <span>Practice account</span>
-              <span className="lp-pill">Example</span>
-            </div>
-            <div className="lp-card-value">$10,482.17</div>
-            <div className="lp-card-delta">+$482.17 since you started</div>
-            <Spark />
-            <div className="lp-card-rows">
-              <div><span>Cash</span><b>$6,240.00</b></div>
-              <div><span>Invested</span><b>$4,242.17</b></div>
-            </div>
-            <figcaption>An illustration of the screen, not real results.</figcaption>
-          </figure>
+          <Scene />
         </section>
 
         <section id="features" className="lp-section">

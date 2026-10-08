@@ -167,3 +167,42 @@ table.table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .chart-bar .btn { background: rgba(8, 12, 24, 0.92); }
 
 .splash { height: 100vh; display: grid; place-items: center; color: var(--muted); }
+
+/* ---------- Depth and polish ---------- */
+.card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.025));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 14px 36px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(10px);
+}
+.metric { transition: transform .2s ease, border-color .2s ease; }
+.metric:hover { transform: translateY(-2px); border-color: rgba(0, 229, 180, 0.35); }
+.metric:first-child .v { font-size: clamp(28px, 4vw, 38px); letter-spacing: -0.02em; }
+.btn-primary { box-shadow: 0 8px 24px rgba(0, 229, 180, 0.22); }
+
+/* Sparkline + flash on price change */
+.quote { grid-template-columns: 1fr auto auto auto; }
+.spark { display: block; opacity: 0.95; }
+@media (max-width: 420px) { .quote .spark { display: none; } .quote { grid-template-columns: 1fr auto auto; } }
+.quote.flash-up { animation: flashUp .6s ease-out; }
+.quote.flash-down { animation: flashDown .6s ease-out; }
+@keyframes flashUp { from { background: rgba(34, 197, 94, 0.28); } to { background: transparent; } }
+@keyframes flashDown { from { background: rgba(239, 68, 68, 0.28); } to { background: transparent; } }
+
+/* Ticker strip along the top of the app */
+.ticker { position: sticky; top: 0; z-index: 30; overflow: hidden; border-bottom: 1px solid var(--line);
+  background: rgba(6, 10, 20, 0.88); backdrop-filter: blur(12px); }
+.ticker-track { display: flex; width: max-content; animation: tickerMove 55s linear infinite; }
+.ticker:hover .ticker-track, .ticker:focus-within .ticker-track { animation-play-state: paused; }
+.tick { display: inline-flex; gap: 10px; align-items: baseline; padding: 9px 22px; font-size: 13.5px; color: var(--text); text-decoration: none; white-space: nowrap; }
+.tick b { color: var(--muted); font-weight: 700; }
+@keyframes tickerMove { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .ticker { overflow-x: auto; } .ticker-track { animation: none; } }
+.quote { grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 10px; }
+.quote > span:first-child { min-width: 0; line-height: 1.25; }
+.quote .base { display: block; }
+.quote .chg { min-width: 64px; }
+@media (max-width: 420px) { .quote { grid-template-columns: minmax(0, 1fr) auto auto; } }
+@media (max-width: 600px) {
+  .metrics { grid-template-columns: 1fr 1fr; }
+  .metrics .metric:first-child { grid-column: 1 / -1; }
+}

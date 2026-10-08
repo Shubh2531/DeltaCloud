@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Icon from "../components/Icon";
+import MarketTicker from "../components/MarketTicker";
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: "dashboard" },
@@ -42,7 +44,10 @@ export default function DeltaLayout() {
       </aside>
 
       <main className="main" id="main">
-        <Outlet />
+        <MarketTicker />
+        <Suspense fallback={<div className="page muted">Loading…</div>}>
+          <Outlet />
+        </Suspense>
       </main>
 
       <nav className="bottom-nav" aria-label="Main">

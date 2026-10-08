@@ -1,3 +1,4 @@
+import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 
@@ -7,12 +8,12 @@ import Register from "./pages/Register";
 import VerifyOtp from "./pages/VerifyOtp";
 import ForgotPassword from "./pages/ForgotPassword";
 
-import Dashboard from "./pages/Dashboard";
-import Trading from "./pages/Trading";
-import Portfolio from "./pages/Portfolio";
-import Insights from "./pages/Insights";
-import Compounding from "./pages/Compounding";
-import Settings from "./pages/Settings";
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Trading = lazy(() => import("./pages/Trading"));
+const Portfolio = lazy(() => import("./pages/Portfolio"));
+const Insights = lazy(() => import("./pages/Insights"));
+const Compounding = lazy(() => import("./pages/Compounding"));
+const Settings = lazy(() => import("./pages/Settings"));
 
 import DeltaLayout from "./layouts/DeltaLayout";
 

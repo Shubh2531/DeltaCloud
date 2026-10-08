@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import api from "../lib/api";
+import { MARKETS } from "../lib/symbols";
 import { socket } from "../lib/socket";
 import { useAuth } from "./AuthContext";
 
@@ -13,11 +14,23 @@ export function MarketProvider({ children }) {
   const [mode, setMode] = useState("connecting");
   const [connected, setConnected] = useState(false);
   const [updatedAt, setUpdatedAt] = useState(null);
+  // The last ~60 prices seen per market (this session only), for sparklines.
+  const [trail, setTrail] = useState({});
   const retries = useRef(0);
 
   const apply = useCallback((snapshot) => {
     if (!snapshot?.prices) return;
     setPrices(snapshot.prices);
+    setTrail((prev) => {
+      const next = { ...prev };
+      for (const [id, q] of Object.entries(snapshot.prices)) {
+        if (!Number.isFinite(q?.c)) continue;
+        const arr = prev[id] ? prev[id].slice(-59) : [];
+        arr.push(q.c);
+        next[id] = arr;
+      }
+      return next;
+    });
     setMode(snapshot.mode || "connecting");
     setUpdatedAt(snapshot.ts || Date.now());
   }, []);
@@ -27,6 +40,7 @@ export function MarketProvider({ children }) {
       socket.disconnect();
       setConnected(false);
       setPrices({});
+      setTrail({});
       setMode("connecting");
       return undefined;
     }
@@ -57,6 +71,18 @@ export function MarketProvider({ children }) {
       }
     };
 
+    // Pre-fill the mini charts from the server's recent history so they are not empty at first.
+    MARKETS.forEach((m) =>
+      api
+        .get(`/market/history/${m.id}`)
+        .then((res) => {
+          if (!alive) return;
+          const seed = (res.data?.points || []).map((pt) => pt.p).filter(Number.isFinite).slice(-60);
+          if (seed.length > 1) setTrail((prev) => ({ ...prev, [m.id]: [...seed, ...(prev[m.id] || [])].slice(-60) }));
+        })
+        .catch(() => {})
+    );
+
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
     socket.on("connect_error", onError);
@@ -81,8 +107,8 @@ export function MarketProvider({ children }) {
   }, [user, apply]);
 
   const value = useMemo(
-    () => ({ prices, mode, connected, updatedAt }),
-    [prices, mode, connected, updatedAt]
+    () => ({ prices, trail, mode, connected, updatedAt }),
+    [prices, trail, mode, connected, updatedAt]
   );
   return <MarketContext.Provider value={value}>{children}</MarketContext.Provider>;
 }
