@@ -6,7 +6,7 @@ import { issueOtp, checkOtp } from "../services/otp.js";
 import { sendOtpEmail } from "../services/mail.js";
 import { hashToken, startSession, verifyRefresh } from "../services/tokens.js";
 import { requireAuth } from "../middleware/auth.js";
-import { normalizeEmail, cleanName, validatePassword, isOtp } from "../lib/validators.js";
+import { normalizeEmail, cleanName, validatePassword, validateDob, isOtp } from "../lib/validators.js";
 
 const router = Router();
 
@@ -45,17 +45,37 @@ router.post(
     if (!email) return fail(res, 400, "Enter a valid email address.");
     const pwError = validatePassword(password);
     if (pwError) return fail(res, 400, pwError);
+    const dobResult = validateDob(req.body?.dob);
+    if (dobResult.error) return fail(res, 400, dobResult.error);
 
     let user = await User.findOne({ email });
     if (user?.isVerified) {
       return fail(res, 409, "An account with this email already exists. Sign in instead.");
     }
+
+    // Same full name and date of birth as an existing, verified account: almost certainly
+    // the same person opening a second account under a different email.
+    const sameIdentity = await User.findOne({
+      name: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
+      dob: dobResult.dob,
+      isVerified: true,
+      email: { $ne: email },
+    });
+    if (sameIdentity) {
+      return fail(
+        res,
+        409,
+        "An account already exists for this name and date of birth. Sign in, or use Forgot password if you don't remember which email you used."
+      );
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
     if (user) {
       user.name = name;
+      user.dob = dobResult.dob;
       user.passwordHash = passwordHash;
     } else {
-      user = new User({ email, name, passwordHash });
+      user = new User({ email, name, dob: dobResult.dob, passwordHash });
     }
     await user.save();
 

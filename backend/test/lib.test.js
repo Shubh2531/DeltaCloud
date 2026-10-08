@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import { executeOrder, TradeError } from "../src/lib/paperMath.js";
 import { computeInsights, MIN_SAMPLES, sma, pctChange } from "../src/lib/indicators.js";
-import { normalizeEmail, cleanName, validatePassword, parseQty, isOtp } from "../src/lib/validators.js";
+import { normalizeEmail, cleanName, validatePassword, validateDob, parseQty, isOtp } from "../src/lib/validators.js";
 import { generateOtp } from "../src/lib/code.js";
 import { stepPrice } from "../src/lib/simulate.js";
 import { isSymbol, SYMBOLS } from "../src/lib/symbols.js";
@@ -125,6 +125,33 @@ test("email, name and password validation", () => {
   assert.ok(validatePassword("12345678"));
   assert.equal(validatePassword("abcdef12"), null);
   assert.ok(validatePassword("a1" + "x".repeat(80)));
+});
+
+test("date of birth validation", () => {
+  const todayIso = (yearsAgo, dayShift = 0) => {
+    const d = new Date();
+    d.setUTCFullYear(d.getUTCFullYear() - yearsAgo);
+    d.setUTCDate(d.getUTCDate() + dayShift);
+    return d.toISOString().slice(0, 10);
+  };
+
+  assert.ok(validateDob(undefined).error);
+  assert.ok(validateDob("").error);
+  assert.ok(validateDob("not-a-date").error);
+  assert.ok(validateDob("2020-13-40").error, "rejects an impossible calendar date");
+  assert.ok(validateDob("2020-02-30").error, "rejects a day that does not exist in that month");
+  assert.ok(validateDob(todayIso(-1)).error, "rejects a date in the future");
+  assert.ok(validateDob(todayIso(200)).error, "rejects an implausibly old date");
+
+  assert.ok(validateDob(todayIso(17)).error, "17 years old is rejected");
+  assert.match(validateDob(todayIso(17)).error, /18/);
+  // Exactly 18 today is allowed; 18 years minus one day is not yet 18.
+  assert.equal(validateDob(todayIso(18)).error, undefined);
+  assert.ok(validateDob(todayIso(18, 1)).error, "one day short of 18 is rejected");
+
+  const ok = validateDob(todayIso(30));
+  assert.equal(ok.error, undefined);
+  assert.ok(ok.dob instanceof Date);
 });
 
 test("quantity and otp parsing", () => {

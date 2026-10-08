@@ -26,6 +26,32 @@ export function validatePassword(password) {
   return null;
 }
 
+// Accepts "YYYY-MM-DD" (what <input type="date"> sends). Requires the user to be
+// at least 18 and the date to be a real, past calendar date.
+export function validateDob(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return { error: "Enter your date of birth." };
+  }
+  const [y, m, d] = value.split("-").map(Number);
+  const dob = new Date(Date.UTC(y, m - 1, d));
+  if (dob.getUTCFullYear() !== y || dob.getUTCMonth() !== m - 1 || dob.getUTCDate() !== d) {
+    return { error: "Enter a valid date of birth." };
+  }
+  const now = new Date();
+  const todayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  if (dob.getTime() > todayUtc.getTime()) return { error: "That date of birth is in the future." };
+
+  let age = todayUtc.getUTCFullYear() - dob.getUTCFullYear();
+  const hadBirthdayThisYear =
+    todayUtc.getUTCMonth() > dob.getUTCMonth() ||
+    (todayUtc.getUTCMonth() === dob.getUTCMonth() && todayUtc.getUTCDate() >= dob.getUTCDate());
+  if (!hadBirthdayThisYear) age -= 1;
+
+  if (age < 18) return { error: "You must be at least 18 to create a DeltaCloud account." };
+  if (age > 120) return { error: "Enter a valid date of birth." };
+  return { dob };
+}
+
 export function isOtp(value) {
   return typeof value === "string" && /^\d{6}$/.test(value.trim());
 }

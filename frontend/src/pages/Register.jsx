@@ -3,10 +3,21 @@ import { Link, useNavigate } from "react-router-dom";
 import api, { errorMessage } from "../lib/api";
 import AuthShell from "../components/AuthShell";
 
+// Bounds for the date-of-birth field: must be 18+ and not absurdly old.
+function dobBounds() {
+  const d = new Date();
+  const max = new Date(Date.UTC(d.getUTCFullYear() - 18, d.getUTCMonth(), d.getUTCDate()));
+  const min = new Date(Date.UTC(d.getUTCFullYear() - 120, d.getUTCMonth(), d.getUTCDate()));
+  const iso = (x) => x.toISOString().slice(0, 10);
+  return { min: iso(min), max: iso(max) };
+}
+
 export default function Register() {
   const navigate = useNavigate();
+  const { min: dobMin, max: dobMax } = dobBounds();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [dob, setDob] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -18,7 +29,7 @@ export default function Register() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await api.post("/auth/register", { name, email, password });
+      const { data } = await api.post("/auth/register", { name, email, password, dob });
       const normalized = email.trim().toLowerCase();
       try {
         sessionStorage.setItem("dc_otp_email", normalized);
@@ -66,6 +77,24 @@ export default function Register() {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+        <label className="label" htmlFor="reg-dob">
+          Date of birth
+        </label>
+        <input
+          id="reg-dob"
+          className="input"
+          type="date"
+          aria-label="Date of birth"
+          autoComplete="bday"
+          min={dobMin}
+          max={dobMax}
+          value={dob}
+          onChange={(e) => setDob(e.target.value)}
+          required
+        />
+        <p className="small muted" style={{ margin: "2px 0 14px" }}>
+          You must be 18 or older. We ask so we don't mix up two people who share a name.
+        </p>
         <div className="password-wrap">
           <input
             className="input"
