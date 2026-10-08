@@ -227,3 +227,17 @@ table.table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .tone-negative { color: var(--neg); }
 .story-compact { padding: 12px 0; border: 0; border-top: 1px solid var(--line); background: none; border-radius: 0; }
 .story-compact h3 { font-size: 15px; margin: 4px 0 0; }
+
+/* ---------- Market pulse ---------- */
+.pulse-line { margin: 0 0 14px; font-size: 17px; line-height: 1.5; max-width: 70ch; }
+.pulse-grid { display: grid; grid-template-columns: minmax(180px, 220px) minmax(0, 1fr) minmax(0, 1fr); gap: 20px 28px; align-items: center; }
+.pulse-gauge { text-align: center; }
+.gauge { width: 100%; max-width: 220px; height: auto; }
+.gauge-needle { transform-origin: 100px 100px; transition: transform 1.2s cubic-bezier(.2,.8,.2,1); }
+.pulse-avg { font-weight: 700; margin-top: -4px; }
+.pulse-stats { display: grid; gap: 10px; }
+.pulse-row { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.tonebar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--panel-2); margin: 8px 0; }
+.tonebar span { display: block; height: 100%; }
+@media (max-width: 900px) { .pulse-grid { grid-template-columns: 1fr; } .pulse-gauge { text-align: left; } }
+@media (prefers-reduced-motion: reduce) { .gauge-needle { transition: none; } }
