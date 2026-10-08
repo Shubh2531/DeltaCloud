@@ -85,13 +85,23 @@ The backend reads public RSS feeds from central banks and regulators (Federal Re
 - **Install as an app (no store needed):** it is a Progressive Web App. iPhone/iPad: Safari, Share, Add to Home Screen. Android: Chrome menu, Install app. Mac, Windows, Linux: Chrome or Edge, install icon in the address bar. The service worker (`frontend/public/sw.js`) keeps the shell available offline; pages always load fresh from the network first.
 - **App Store / Google Play:** the Capacitor project is configured (`com.deltacloud.app`). iOS builds need a Mac with Xcode and an Apple Developer account. Android builds need Android Studio and a Google Play developer account.
 
-## Mobile (Capacitor)
+## Mobile apps (iPhone and Android)
 
-`localhost` does not work from a phone. Deploy the backend over HTTPS, set `REACT_APP_API_BASE_URL` to it, then:
+The same code is wrapped as native apps with Capacitor (`frontend/capacitor.config.json`, app id `com.deltacloud.app`). The `android/` and `ios/` folders are generated on demand, so they are not committed.
+
+**Android (works from GitHub, no Mac needed).** In the repo, open Actions, choose **Build Android app**, and click Run workflow. When it finishes, download the `DeltaCloud-android-debug` artifact. It contains `app-debug.apk`, which you can install on an Android phone (allow installs from your browser or files app). Before this, set the Actions variable `REACT_APP_API_BASE_URL` to your live backend (https). The phone cannot reach `localhost`.
+
+**Google Play.** Needs a Google Play developer account (one-time fee) and a signed release build. Create a signing key, store it as GitHub secrets, and switch the workflow from `assembleDebug` to a signed `bundleRelease`.
+
+**iPhone.** The **Check iOS build** workflow confirms the app compiles on a Mac runner. It does not produce an installable app. To install on iPhones or release on the App Store you need an Apple Developer account (yearly fee), signing certificates and a provisioning profile, then a TestFlight upload. Add those as GitHub secrets and the workflow can be extended to upload to TestFlight.
+
+**Backend access.** The backend must allow the app origins `capacitor://localhost` (iOS) and `https://localhost` (Android). They are in the default `CLIENT_ORIGINS`. If you set that variable yourself, include them.
+
+Run locally instead (needs Xcode for iOS, Android Studio for Android):
 
 ```bash
-cd frontend && npm run build && npx cap sync
-npx cap open android   # or ios
+cd frontend && npm run build && npx cap add android && npx cap sync
+npx cap open android   # or: npx cap add ios && npx cap open ios
 ```
 
 ## Security

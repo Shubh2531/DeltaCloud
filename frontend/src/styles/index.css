@@ -241,3 +241,7 @@ table.table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .tonebar span { display: block; height: 100%; }
 @media (max-width: 900px) { .pulse-grid { grid-template-columns: 1fr; } .pulse-gauge { text-align: left; } }
 @media (prefers-reduced-motion: reduce) { .gauge-needle { transition: none; } }
+
+/* Phones with a notch or camera cut-out: keep the top bars out from under the status area. */
+.ticker { padding-top: env(safe-area-inset-top); }
+.splash { padding-top: env(safe-area-inset-top); }

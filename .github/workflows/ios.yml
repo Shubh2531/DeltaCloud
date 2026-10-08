@@ -1,0 +1,29 @@
+name: Check iOS build
+# Manual run. Confirms the iPhone app compiles on a Mac runner.
+# This does NOT make an installable app: that needs an Apple Developer account and signing (see README).
+on:
+  workflow_dispatch:
+jobs:
+  ios:
+    runs-on: macos-latest
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install
+      - name: Build the web app for the native wrapper
+        run: npm run build
+        env:
+          CI: "false"
+          PUBLIC_URL: ""
+          REACT_APP_API_BASE_URL: ${{ vars.REACT_APP_API_BASE_URL }}
+      - name: Create the iOS project
+        run: |
+          npx cap add ios
+          npx cap sync ios
+      - name: Compile for the iPhone simulator (unsigned)
+        working-directory: frontend/ios/App
+        run: |
+          if [ -d App.xcworkspace ]; then TARGET="-workspace App.xcworkspace"; else TARGET="-project App.xcodeproj"; fi
+          xcodebuild $TARGET -scheme App -sdk iphonesimulator -configuration Debug build CODE_SIGNING_ALLOWED=NO

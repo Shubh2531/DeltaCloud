@@ -1,0 +1,45 @@
+name: Build Android app
+# Manual run: Actions tab -> "Build Android app" -> Run workflow.
+# Produces an installable debug APK. A Play Store release also needs a signing key (see README).
+on:
+  workflow_dispatch:
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - run: npm install
+      - name: Build the web app for the native wrapper
+        run: npm run build
+        env:
+          CI: "false"
+          PUBLIC_URL: ""
+          REACT_APP_API_BASE_URL: ${{ vars.REACT_APP_API_BASE_URL }}
+      - name: Create the Android project
+        run: |
+          npx cap add android
+          npx cap sync android
+      - name: Apply the DeltaCloud app icon
+        continue-on-error: true
+        run: |
+          RES=android/app/src/main/res
+          sizes="mdpi:48:108 hdpi:72:162 xhdpi:96:216 xxhdpi:144:324 xxxhdpi:192:432"
+          for s in $sizes; do
+            d=${s%%:*}; rest=${s#*:}; icon=${rest%%:*}; fg=${rest#*:}
+            convert public/icons/icon-512.png -resize ${icon}x${icon} $RES/mipmap-$d/ic_launcher.png
+            convert public/icons/icon-512.png -resize ${icon}x${icon} $RES/mipmap-$d/ic_launcher_round.png
+            convert public/icons/foreground-512.png -resize ${fg}x${fg} $RES/mipmap-$d/ic_launcher_foreground.png
+          done
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#060A14</color>\n</resources>\n' > $RES/values/ic_launcher_background.xml
+      - name: Build the APK
+        working-directory: frontend/android
+        run: ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DeltaCloud-android-debug
+          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk

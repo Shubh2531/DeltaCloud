@@ -1,0 +1,9 @@
+{
+  "appId": "com.deltacloud.app",
+  "appName": "DeltaCloud",
+  "webDir": "build",
+  "backgroundColor": "#060a14",
+  "server": { "androidScheme": "https" },
+  "ios": { "contentInset": "always", "backgroundColor": "#060a14" },
+  "android": { "backgroundColor": "#060a14" }
+}

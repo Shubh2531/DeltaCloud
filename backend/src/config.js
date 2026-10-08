@@ -34,7 +34,7 @@ export const config = {
   refreshTtl: "7d",
   clientOrigins: (
     process.env.CLIENT_ORIGINS ||
-    "http://localhost:3000,http://localhost:3001,capacitor://localhost,http://localhost"
+    "http://localhost:3000,http://localhost:3001,capacitor://localhost,http://localhost,https://localhost"
   )
     .split(",")
     .map((s) => s.trim())
