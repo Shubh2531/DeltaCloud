@@ -40,7 +40,7 @@ export default function DeltaLayout() {
           <button type="button" className="btn btn-sm" onClick={logout}>
             <Icon name="logout" size={16} /> Sign out
           </button>
-          <div className="faint small">© {new Date().getFullYear()} DeltaCloud</div>
+          <div className="faint small">© 2025 Delta Cloud</div>
         </div>
       </aside>
 

@@ -53,7 +53,8 @@ h1, h2, h3 { margin: 0; }
 }
 .nav-link:hover { background: var(--panel-2); }
 .nav-link.active { background: rgba(0, 229, 180, 0.12); color: var(--accent); }
-.side-foot { margin-top: auto; padding: 12px 10px 0; font-size: 13px; color: var(--muted); display: grid; gap: 10px; }
+.side-foot { margin-top: auto; padding: 12px 10px 0; font-size: 13px; color: var(--muted); display: grid; gap: 8px; }
+.side-foot .faint { margin-top: -2px; }
 .side-foot .who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .main { overflow-y: auto; min-width: 0; }
 .bottom-nav { display: none; }
