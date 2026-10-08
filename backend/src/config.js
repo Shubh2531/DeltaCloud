@@ -37,7 +37,8 @@ export const config = {
     "http://localhost:3000,http://localhost:3001,capacitor://localhost,http://localhost,https://localhost"
   )
     .split(",")
-    .map((s) => s.trim())
+    .map((s) => s.trim().replace(/\/.*$/, (m) => (m.startsWith("//") ? m : "")))
+    .map((s) => s.replace(/^([a-z][a-z0-9+.-]*:\/\/[^/]+).*$/i, "$1").toLowerCase())
     .filter(Boolean),
   smtp: {
     host: process.env.SMTP_HOST || "",
