@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import VerifyOtp from "./pages/VerifyOtp";
 import ForgotPassword from "./pages/ForgotPassword";
+import DeltaLayout from "./layouts/DeltaLayout";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Trading = lazy(() => import("./pages/Trading"));
@@ -16,7 +17,6 @@ const Insights = lazy(() => import("./pages/Insights"));
 const Compounding = lazy(() => import("./pages/Compounding"));
 const Settings = lazy(() => import("./pages/Settings"));
 
-import DeltaLayout from "./layouts/DeltaLayout";
 
 export default function App() {
   const { user, loading } = useAuth();
