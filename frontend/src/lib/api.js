@@ -1,6 +1,10 @@
 import axios from "axios";
 
-export const BASE = (process.env.REACT_APP_API_BASE_URL || "http://localhost:8080").replace(/\/+$/, "");
+const PRODUCTION_API = "https://deltacloud.onrender.com";
+const configured = process.env.REACT_APP_API_BASE_URL || "";
+// Use the configured address unless it is empty or a placeholder; then fall back by environment.
+const usable = configured && !/example\.(com|invalid)/.test(configured);
+export const BASE = (usable ? configured : process.env.NODE_ENV === "production" ? PRODUCTION_API : "http://localhost:8080").replace(/\/+$/, "");
 export const API = `${BASE}/api`;
 
 const KEYS = { access: "dc_access", refresh: "dc_refresh", user: "dc_user" };
