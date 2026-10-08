@@ -99,7 +99,8 @@ async function start() {
   try {
     await mongoose.connect(config.mongoUri);
     console.log("✅ MongoDB connected");
-    await verifyMail();
+    // Check email in the background so a slow mail host can never delay the server starting.
+    verifyMail().catch(() => {});
     feed.start();
     startNews();
     server.listen(config.port, () => {

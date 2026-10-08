@@ -10,6 +10,10 @@ const transporter =
         port: smtp.port,
         secure: smtp.port === 465,
         auth: { user: smtp.user, pass: smtp.pass },
+        // Fail fast instead of hanging if the mail host cannot be reached.
+        connectionTimeout: 10_000,
+        greetingTimeout: 10_000,
+        socketTimeout: 15_000,
       })
     : null;
 
