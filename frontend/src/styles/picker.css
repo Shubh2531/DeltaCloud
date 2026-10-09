@@ -23,4 +23,4 @@
   border: 1px solid var(--line); color: var(--muted); white-space: nowrap;
 }
 .kind-tag.stock { color: #8fb3ff; border-color: rgba(91, 124, 250, 0.45); }
-.kind-tag.crypto { color: var(--accent); border-color: rgba(0, 229, 180, 0.35); }
+.kind-tag.crypto { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.35); }

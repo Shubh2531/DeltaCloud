@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import FeedBadge from "../components/FeedBadge";
 import Disclaimer from "../components/Disclaimer";
 import InviteCard from "../components/InviteCard";
+import PasskeyCard from "../components/PasskeyCard";
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -37,6 +38,7 @@ export default function Settings() {
       </div>
 
       <div className="cols-even">
+        <PasskeyCard />
         <InviteCard />
         <div className="card" style={{ display: "grid", gap: 10 }}>
           <h2 style={{ marginBottom: 0 }}>Account</h2>

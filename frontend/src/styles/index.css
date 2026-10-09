@@ -9,13 +9,13 @@
   --text: #e6ebf5;
   --muted: #94a3b8;
   --faint: #64748b;
-  --accent: #00e5b4;
+  --accent: var(--accent);
   --accent-2: #5b7cfa;
   --pos: #22c55e;
   --neg: #ef4444;
   --warn: #f5b942;
   --radius: 14px;
-  --font: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font: Sora, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -52,7 +52,7 @@ h1, h2, h3 { margin: 0; }
   color: #cbd5e1; text-decoration: none; font-weight: 600; font-size: 15px;
 }
 .nav-link:hover { background: var(--panel-2); }
-.nav-link.active { background: rgba(0, 229, 180, 0.12); color: var(--accent); }
+.nav-link.active { background: rgba(var(--accent-rgb), 0.12); color: var(--accent); }
 .side-foot { margin-top: auto; padding: 12px 10px 0; font-size: 13px; color: var(--muted); display: grid; gap: 8px; }
 .side-foot .faint { margin-top: -2px; }
 .side-foot .who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -114,7 +114,7 @@ h1, h2, h3 { margin: 0; }
 .btn-danger { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.45); color: #fecaca; }
 .btn-sm { padding: 6px 10px; font-size: 13px; border-radius: 8px; }
 .btn-block { width: 100%; }
-.btn[aria-pressed="true"], .btn.on { background: rgba(0, 229, 180, 0.16); border-color: rgba(0, 229, 180, 0.5); color: var(--accent); }
+.btn[aria-pressed="true"], .btn.on { background: rgba(var(--accent-rgb), 0.16); border-color: rgba(var(--accent-rgb), 0.5); color: var(--accent); }
 
 .field { display: grid; gap: 6px; }
 .field label, .label { font-size: 13px; color: var(--muted); }
@@ -176,9 +176,9 @@ table.table { width: 100%; border-collapse: collapse; font-size: 14px; }
   backdrop-filter: blur(10px);
 }
 .metric { transition: transform .2s ease, border-color .2s ease; }
-.metric:hover { transform: translateY(-2px); border-color: rgba(0, 229, 180, 0.35); }
+.metric:hover { transform: translateY(-2px); border-color: rgba(var(--accent-rgb), 0.35); }
 .metric:first-child .v { font-size: clamp(28px, 4vw, 38px); letter-spacing: -0.02em; }
-.btn-primary { box-shadow: 0 8px 24px rgba(0, 229, 180, 0.22); }
+.btn-primary { box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.22); }
 
 /* Sparkline + flash on price change */
 .quote { grid-template-columns: 1fr auto auto auto; }
@@ -213,7 +213,7 @@ table.table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .stories { display: grid; gap: 12px; }
 .story { padding: 16px 18px; border-radius: var(--radius); border: 1px solid var(--line);
   background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); }
-.story:hover { border-color: rgba(0, 229, 180, 0.3); }
+.story:hover { border-color: rgba(var(--accent-rgb), 0.3); }
 .story-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; }
 .story h3 { font-size: 18px; line-height: 1.35; margin: 8px 0 6px; font-weight: 700; }
 .story h3 a { color: var(--text); text-decoration: none; }
@@ -222,7 +222,7 @@ table.table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .story-tags { display: flex; gap: 6px; flex-wrap: wrap; }
 .story-also { margin-top: 10px; }
 .chip { display: inline-flex; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); background: var(--panel); text-decoration: none; }
-.chip-asset { color: var(--accent); border-color: rgba(0, 229, 180, 0.4); }
+.chip-asset { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.4); }
 .chip-official { color: #c7d2fe; border-color: rgba(91, 124, 250, 0.5); }
 .tone-positive { color: var(--pos); }
 .tone-negative { color: var(--neg); }
@@ -279,3 +279,10 @@ table.table { width: 100%; border-collapse: collapse; font-size: 14px; }
   flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; background: var(--panel-2);
   border: 1px solid var(--line); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px;
 }
+
+/* ---------- Face ID / passkeys ---------- */
+.passkey-nudge { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; border-color: rgba(var(--accent-rgb), 0.35); }
+.passkey-nudge p { margin: 4px 0 0; }
+.passkey-actions { display: flex; gap: 8px; }
+.passkey-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.passkey-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); }

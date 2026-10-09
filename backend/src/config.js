@@ -63,6 +63,15 @@ export const config = {
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean),
   publicSiteUrl: (process.env.PUBLIC_SITE_URL || "https://joindeltacloud.com").replace(/\/+$/, ""),
+  // Passkeys (Face ID sign-in) are tied to one domain. Subdomains like www. work too.
+  passkey: {
+    rpName: "DeltaCloud",
+    rpID: process.env.PASSKEY_RP_ID || (isProd ? "joindeltacloud.com" : "localhost"),
+    origins: (process.env.PASSKEY_ORIGINS || (isProd ? "https://joindeltacloud.com,https://www.joindeltacloud.com" : "http://localhost:3000,http://localhost:3001"))
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+  },
   smtp: {
     host: process.env.SMTP_HOST || "",
     port: Number(process.env.SMTP_PORT) || 2525,

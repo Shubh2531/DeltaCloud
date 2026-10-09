@@ -1,6 +1,6 @@
 .founder h3 { font-size: 15px; margin: 0 0 8px; color: var(--muted); font-weight: 600; }
 
-.fd-yc { display: grid; gap: 8px; border-color: rgba(0, 229, 180, 0.3); }
+.fd-yc { display: grid; gap: 8px; border-color: rgba(var(--accent-rgb), 0.3); }
 .fd-yc b { color: var(--accent); }
 .fd-yc p { margin: 0; font-size: 16px; line-height: 1.6; }
 .fd-yc .btn { justify-self: start; }

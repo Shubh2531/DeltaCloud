@@ -46,12 +46,12 @@ function Spark() {
     <svg className="lp-spark" viewBox="0 0 320 120" role="img" aria-label="Example line chart of a practice account value rising over time">
       <defs>
         <linearGradient id="lpFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#00e5b4" stopOpacity="0.28" />
-          <stop offset="1" stopColor="#00e5b4" stopOpacity="0" />
+          <stop offset="0" stopColor="#8b7bff" stopOpacity="0.28" />
+          <stop offset="1" stopColor="#8b7bff" stopOpacity="0" />
         </linearGradient>
       </defs>
       <path className="lp-spark-area" d="M0 96 L30 88 L62 92 L96 70 L128 76 L160 52 L194 60 L226 36 L258 44 L290 22 L320 28 L320 120 L0 120 Z" fill="url(#lpFill)" />
-      <path className="lp-spark-line" pathLength="1" d="M0 96 L30 88 L62 92 L96 70 L128 76 L160 52 L194 60 L226 36 L258 44 L290 22 L320 28" fill="none" stroke="#00e5b4" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+      <path className="lp-spark-line" pathLength="1" d="M0 96 L30 88 L62 92 L96 70 L128 76 L160 52 L194 60 L226 36 L258 44 L290 22 L320 28" fill="none" stroke="#8b7bff" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   );
 }
@@ -65,7 +65,7 @@ function Ring() {
           <div key={sym} className="lp-ring-item" style={{ "--i": i }}>
             <b>{sym}</b>
             <span>{name}</span>
-            <svg viewBox="0 0 100 50"><path d={d} fill="none" stroke="#00e5b4" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            <svg viewBox="0 0 100 50"><path d={d} fill="none" stroke="#8b7bff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </div>
         ))}
       </div>

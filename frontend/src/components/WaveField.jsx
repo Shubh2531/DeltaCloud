@@ -23,9 +23,9 @@ export default function WaveField() {
     const draw = () => {
       ctx.clearRect(0, 0, w, h);
       const waves = [
-        { amp: 0.07, len: 1.6, spd: 0.5, y: 0.62, c: "0,229,180", a: 0.34 },
+        { amp: 0.07, len: 1.6, spd: 0.5, y: 0.62, c: "94, 231, 255", a: 0.34 },
         { amp: 0.09, len: 1.1, spd: 0.35, y: 0.7, c: "91,124,250", a: 0.28 },
-        { amp: 0.05, len: 2.2, spd: 0.7, y: 0.78, c: "0,229,180", a: 0.16 },
+        { amp: 0.05, len: 2.2, spd: 0.7, y: 0.78, c: "124, 255, 196", a: 0.16 },
       ];
       for (const wv of waves) {
         ctx.beginPath();

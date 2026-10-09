@@ -22,7 +22,7 @@
 .intel-price { font-size: 20px; font-weight: 600; white-space: nowrap; }
 .intel-summary { font-size: 16px; margin-top: 12px !important; }
 
-.intel-answer { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: rgba(0, 229, 180, 0.07); border: 1px solid rgba(0, 229, 180, 0.25); }
+.intel-answer { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: rgba(var(--accent-rgb), 0.07); border: 1px solid rgba(var(--accent-rgb), 0.25); }
 .intel-answer b { display: block; margin-bottom: 4px; color: var(--accent); }
 .intel-answer p { margin: 0; }
 
