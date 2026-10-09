@@ -1,11 +1,14 @@
 // Cards get a subtle 3D tilt following the pointer. Everything else reveals as it
-// scrolls into view: motion.css hides these elements by default (opacity 0, shifted
-// down) as a CSS default — painted before any JS runs, so there is no flash and no
-// race with the observer below. The IntersectionObserver here just adds ".dc-in"
-// the moment an element crosses into the viewport, which is what actually plays the
-// CSS transition. Elements already on screen at page-load (above the fold) get
-// their ".dc-in" the instant they're observed, so they still "arrive" rather than
-// sitting there inert — this matches a normal scroll-reveal page.
+// scrolls into view and hides again once it scrolls back out — motion.css hides
+// these elements by default (opacity 0, shifted down) as a CSS default, painted
+// before any JS runs, so there is no flash and no race with the observer below.
+// The IntersectionObserver here toggles ".dc-in" every time an element crosses in
+// or out of the viewport (it never stops watching), which is what plays the CSS
+// transition both ways: scroll down, it rises in; scroll back up past it, it
+// fades back out; scroll down to it again, it rises in again. Works the same on
+// phone, tablet or desktop — IntersectionObserver measures against the real
+// browser viewport, whatever size that is, on every engine that supports it
+// (every current mobile and desktop browser, including in-app WebViews).
 
 const CARD_SEL = ".card, .fd-tile, .intel-tech-item, .passkey-list li, .settings-nav-item";
 
@@ -74,17 +77,23 @@ function scanForReveals(root) {
 }
 
 function startReveal() {
+  // Very old browsers (no IntersectionObserver at all) just see everything —
+  // better than content that never appears.
+  if (typeof IntersectionObserver === "undefined") {
+    document.documentElement.classList.add("motion-reduce");
+    return;
+  }
+
   revealObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add("dc-in");
-        revealObserver.unobserve(entry.target);
+        entry.target.classList.toggle("dc-in", entry.isIntersecting);
       });
     },
-    // Fire a little before the element's bottom edge reaches the viewport's bottom,
-    // so the rise finishes roughly as it comes fully into view, not after.
-    { threshold: 0.08, rootMargin: "0px 0px -10% 0px" }
+    // A band trimmed in from both viewport edges, so an element reveals a little
+    // before it's fully on screen and hides again once it's mostly off screen —
+    // in either scroll direction, at any viewport size.
+    { threshold: 0.08, rootMargin: "-6% 0px -10% 0px" }
   );
 
   scanForReveals(document);
