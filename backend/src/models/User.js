@@ -15,7 +15,9 @@ const UserSchema = new mongoose.Schema(
 
     // One-time code state. The code itself is only ever stored hashed.
     otpHash: { type: String, select: false },
-    otpPurpose: { type: String, enum: ["login", "reset"] },
+    otpPurpose: { type: String, enum: ["login", "reset", "email"] },
+    // A new address waiting for its confirmation code (change email in Settings).
+    pendingEmail: { type: String, lowercase: true, trim: true },
     otpExpires: { type: Date },
     otpAttempts: { type: Number, default: 0 },
     otpSentAt: { type: Date },
@@ -29,6 +31,13 @@ const UserSchema = new mongoose.Schema(
     refCode: { type: String },
     source: { type: String },
     referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+
+    // Settings the person chose.
+    prefs: {
+      lang: { type: String, default: "en" }, // DC Intelligence language
+      alertEmails: { type: Boolean, default: true }, // email me when a price alert fires
+      productEmails: { type: Boolean, default: true }, // occasional DeltaCloud news
+    },
 
     // Passkeys (Face ID, Touch ID, fingerprint, Windows Hello). Only the public key is stored;
     // the private key never leaves the person's device.

@@ -52,6 +52,10 @@ const authPerPerson = limiter(LIMITS.authPerPerson, authKey);
 for (const path of ["login", "register", "verify-otp", "resend-otp", "forgot-password", "reset-password"]) {
   app.use(`/api/auth/${path}`, authPerIp, authPerPerson);
 }
+// Account actions that check a password: same limits as sign-in, keyed by the signed-in session.
+for (const path of ["password", "email/start", "email/verify", "delete"]) {
+  app.use(`/api/account/${path}`, authPerIp, limiter(LIMITS.authPerPerson, apiKey));
+}
 // Passkey sign-in has no email, so it's limited per network (generous) and per passkey.
 app.use("/api/auth/passkey/login", authPerIp, limiter(LIMITS.authPerPerson, passkeyKey));
 

@@ -46,9 +46,16 @@ export async function sendOtpEmail({ to, otp, purpose }) {
   }
 
   const reset = purpose === "reset";
-  const subject = reset ? "Reset your DeltaCloud password" : "Your DeltaCloud verification code";
+  const change = purpose === "email";
+  const subject = reset
+    ? "Reset your DeltaCloud password"
+    : change
+    ? "Confirm your new DeltaCloud email"
+    : "Your DeltaCloud verification code";
   const lead = reset
     ? "Use this code to reset your DeltaCloud password."
+    : change
+    ? "Use this code to confirm this is your new DeltaCloud email address."
     : "Use this code to finish signing in to DeltaCloud.";
 
   try {
@@ -67,5 +74,21 @@ export async function sendOtpEmail({ to, otp, purpose }) {
   } catch (err) {
     console.error("Email send failed:", err.message);
     throw Object.assign(new Error("We couldn't send the email. Please try again shortly."), { status: 502 });
+  }
+}
+
+// Any other email (price alerts, notices). Never throws: a missed notice must not break
+// the action that triggered it. Returns true when sent.
+export async function sendNotice({ to, subject, text, html }) {
+  if (!transporter) {
+    if (!config.isProd) console.log(`[dev] email to ${to}: ${subject}\n${text}`);
+    return false;
+  }
+  try {
+    await transporter.sendMail({ from: smtp.from, to, subject, text, html: html || undefined });
+    return true;
+  } catch (err) {
+    console.error("Notice email failed:", err.message);
+    return false;
   }
 }

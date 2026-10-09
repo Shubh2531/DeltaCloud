@@ -381,6 +381,9 @@ function DataSection({ onToast }) {
             {busy ? "Preparing…" : "Download my data"}
           </button>
         </div>
+        <button type="button" className="btn btn-sm" onClick={logout}>
+          Sign out
+        </button>
       </div>
 
       <form className="card settings-danger" onSubmit={deleteAccount}>
