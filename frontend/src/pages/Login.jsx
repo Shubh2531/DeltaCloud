@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import api, { errorMessage } from "../lib/api";
 import AuthShell from "../components/AuthShell";
 import { useAuth } from "../context/AuthContext";
-import { passkeysAvailable, platformAuthAvailable, passkeyLabel, getPasskey, cancelled, devicePasskey, forgetDevicePasskey } from "../lib/passkey";
+import { passkeysAvailable, biometricStatus, passkeyLabel, biometricHelp, getPasskey, cancelled, devicePasskey, forgetDevicePasskey } from "../lib/passkey";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -22,9 +22,14 @@ export default function Login() {
   const canPasskey = passkeysAvailable();
   const [saved, setSaved] = useState(devicePasskey);
   const [sensor, setSensor] = useState(null); // null = still checking
+  const [status, setStatus] = useState(null);
   useEffect(() => {
     let alive = true;
-    platformAuthAvailable().then((ok) => alive && setSensor(ok));
+    biometricStatus().then((s) => {
+      if (!alive) return;
+      setStatus(s);
+      setSensor(s === "ready");
+    });
     return () => {
       alive = false;
     };
@@ -35,7 +40,7 @@ export default function Login() {
     if (faceLoading) return;
     setError("");
     if (sensor === false) {
-      setError(`This device isn't compatible with ${passkeyLabel()} sign-in: it has no face or fingerprint sensor we can use. Sign in with your email below.`);
+      setError(biometricHelp(status, passkeyLabel()));
       return;
     }
     if (!saved) {

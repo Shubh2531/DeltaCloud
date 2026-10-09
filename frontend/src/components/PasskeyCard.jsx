@@ -3,8 +3,9 @@ import api, { errorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import {
   passkeysAvailable,
-  platformAuthAvailable,
+  biometricStatus,
   passkeyLabel,
+  biometricHelp,
   createPasskey,
   cancelled,
   devicePasskey,
@@ -37,13 +38,18 @@ export default function PasskeyCard({ compact = false }) {
   });
   const { user } = useAuth();
   const [available, setAvailable] = useState(null); // null = still checking
+  const [status, setStatus] = useState(null);
   const [onThisDevice, setOnThisDevice] = useState(() => Boolean(devicePasskey()));
   const label = passkeyLabel();
 
   // Only devices with a built-in face or fingerprint sensor get the option.
   useEffect(() => {
     let alive = true;
-    platformAuthAvailable().then((ok) => alive && setAvailable(ok));
+    biometricStatus().then((s) => {
+      if (!alive) return;
+      setStatus(s);
+      setAvailable(s === "ready");
+    });
     return () => {
       alive = false;
     };
@@ -157,11 +163,8 @@ export default function PasskeyCard({ compact = false }) {
           ))}
         </ul>
       )}
-      {!available && (
-        <p className="notice" style={{ margin: 0 }}>
-          This device isn't compatible: it has no face or fingerprint sensor we can use. Open DeltaCloud on your phone or a laptop with Touch
-          ID or Windows Hello to turn it on there.
-        </p>
+      {!available && status && (
+        <p className="notice" style={{ margin: 0 }}>{biometricHelp(status, label)}</p>
       )}
       <button type="button" className="btn btn-primary" onClick={add} disabled={busy || onThisDevice || !available}>
         {busy ? "Waiting for you…" : onThisDevice ? `${label} is on for this device` : `Turn on ${label} for this device`}

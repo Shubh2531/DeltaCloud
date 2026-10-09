@@ -20,11 +20,28 @@ export function passkeysAvailable() {
 
 // True only when this device has a built-in face or fingerprint sensor ready to use.
 export async function platformAuthAvailable() {
-  if (!passkeysAvailable()) return false;
+  return (await biometricStatus()) === "ready";
+}
+
+// A finer-grained check than a flat yes/no, so the UI can explain *why* this device
+// can't use one-tap sign-in instead of just saying "incompatible":
+//   "ready"              — good to go
+//   "no-browser-support" — this browser doesn't implement WebAuthn at all (an old or
+//                           non-Chromium browser — common with OEM/alternative browsers)
+//   "no-device-lock"     — the browser supports it, but the OS says there's no secure
+//                           screen lock to use (no fingerprint, face unlock, PIN or
+//                           pattern set up) — very common on phones straight out of the
+//                           box, especially budget Android devices
+//   "unsupported-site"   — wrong domain (a preview/staging URL, not the real site)
+export async function biometricStatus() {
+  if (!passkeysAvailable()) return "unsupported-site";
+  if (typeof window === "undefined" || !window.PublicKeyCredential || !navigator.credentials) return "no-browser-support";
+  if (typeof window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable !== "function") return "no-browser-support";
   try {
-    return Boolean(await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable?.());
+    const ok = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    return ok ? "ready" : "no-device-lock";
   } catch {
-    return false;
+    return "no-device-lock";
   }
 }
 
@@ -53,14 +70,37 @@ export function forgetDevicePasskey() {
   }
 }
 
-// What to call it on this device.
+// iPadOS Safari has reported itself as a desktop Mac ("Macintosh; Intel Mac OS X…")
+// since iPadOS 13, with no "iPad" anywhere in the string — so a plain user-agent check
+// mislabels every iPad as a Mac and shows "Touch ID" even on an iPad with Face ID. The
+// standard way to tell them apart: a real Mac has no touch screen, and iPadOS Safari's
+// UA string still claims the "MacIntel" platform while reporting touch points.
+const isIPadInDesktopMode = () => navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+
+// What to call it on this device. The Web Authentication API deliberately doesn't say
+// which sensor a device has (that would be a fingerprinting risk), so for iPad — which
+// ships in both Face ID and Touch ID models — we name both rather than guess wrong.
 export function passkeyLabel() {
   const ua = navigator.userAgent || "";
-  if (/iPhone|iPad/i.test(ua)) return "Face ID";
+  if (/iPad/i.test(ua) || isIPadInDesktopMode()) return "Face ID or Touch ID";
+  if (/iPhone|iPod/i.test(ua)) return "Face ID";
   if (/Macintosh/i.test(ua)) return "Touch ID";
-  if (/Android/i.test(ua)) return "fingerprint";
+  // Android phones ship with fingerprint sensors, face unlock, or both — and like iPad,
+  // the browser won't say which, so name both rather than assume.
+  if (/Android/i.test(ua)) return "fingerprint or face unlock";
   if (/Windows/i.test(ua)) return "Windows Hello";
   return "passkey";
+}
+
+// A plain-language reason + what to do, for each biometricStatus() other than "ready".
+export function biometricHelp(status, label) {
+  if (status === "no-browser-support") {
+    return `This browser can't do one-tap sign-in. Open DeltaCloud in Chrome (or your phone's default browser) and try again.`;
+  }
+  if (status === "no-device-lock") {
+    return `Your phone doesn't have a fingerprint, face unlock or screen lock set up yet. Add one in your phone's Settings, then come back here and try again.`;
+  }
+  return `This device isn't compatible with ${label} sign-in. Sign in with your email below.`;
 }
 
 export async function createPasskey(options) {
