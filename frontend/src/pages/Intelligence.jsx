@@ -16,6 +16,22 @@ const SUGGESTIONS = [
   "What do the technicals say, in simple words?",
 ];
 
+const RTL = new Set(["ar", "ur"]);
+const readLang = () => {
+  try {
+    return localStorage.getItem("dc_intel_lang") || "en";
+  } catch {
+    return "en";
+  }
+};
+const saveLang = (code) => {
+  try {
+    localStorage.setItem("dc_intel_lang", code);
+  } catch {
+    /* storage unavailable */
+  }
+};
+
 const parseChange = (text) => {
   const n = Number(String(text || "").replace(/[^0-9.+-]/g, ""));
   return Number.isFinite(n) ? n : null;
@@ -72,6 +88,7 @@ export default function Intelligence() {
   const [error, setError] = useState("");
   const [spike, setSpike] = useState(0);
   const [status, setStatus] = useState(null);
+  const [lang, setLang] = useState(readLang);
   const request = useRef(0);
 
   useEffect(() => {
@@ -81,13 +98,13 @@ export default function Intelligence() {
       .catch(() => {});
   }, []);
 
-  const ask = useCallback(async (symbol, q) => {
+  const ask = useCallback(async (symbol, q, language) => {
     const id = ++request.current;
     setThinking(true);
     setError("");
     setAsked(q);
     try {
-      const { data } = await api.post("/intel/explain", { symbol, question: q });
+      const { data } = await api.post("/intel/explain", { symbol, question: q, lang: language });
       if (id !== request.current) return;
       rememberMarkets([data.market]);
       setResult(data);
@@ -99,11 +116,11 @@ export default function Intelligence() {
     }
   }, []);
 
-  // Explain the chosen market as soon as it's picked.
+  // Explain the chosen market as soon as it's picked, or when the language changes.
   useEffect(() => {
-    ask(market.id, "");
+    ask(market.id, "", lang);
     setQuestion("");
-  }, [market.id, ask]);
+  }, [market.id, lang, ask]);
 
   const reading = useMemo(() => sphereReading(result, thinking), [result, thinking]);
   const e = result?.explanation;
@@ -111,7 +128,7 @@ export default function Intelligence() {
 
   const submit = (ev) => {
     ev.preventDefault();
-    if (question.trim()) ask(market.id, question.trim());
+    if (question.trim()) ask(market.id, question.trim(), lang);
   };
 
   return (
@@ -160,7 +177,7 @@ export default function Intelligence() {
                   disabled={thinking}
                   onClick={() => {
                     setQuestion(s);
-                    ask(market.id, s);
+                    ask(market.id, s, lang);
                   }}
                 >
                   {s}
@@ -168,6 +185,30 @@ export default function Intelligence() {
               ))}
             </div>
           </form>
+          {status?.languages && (
+            <label className="intel-lang small muted">
+              Explain in{" "}
+              <select
+                className="input"
+                value={lang}
+                onChange={(ev) => {
+                  setLang(ev.target.value);
+                  saveLang(ev.target.value);
+                }}
+              >
+                {Object.entries(status.languages).map(([code, name]) => (
+                  <option key={code} value={code}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {status && !status.ai && lang !== "en" && (
+            <p className="small muted" style={{ margin: 0 }}>
+              Other languages turn on with the AI writer. Showing English for now.
+            </p>
+          )}
           {status && !status.ai && (
             <p className="small muted" style={{ margin: 0 }}>
               Running on built-in analysis. Answers get more natural once the AI writer is switched on.
@@ -183,7 +224,12 @@ export default function Intelligence() {
       )}
 
       {showing && e && (
-        <div className={`intel-result${thinking ? " stale" : ""}`} aria-busy={thinking}>
+        <div
+          className={`intel-result${thinking ? " stale" : ""}`}
+          aria-busy={thinking}
+          lang={result.lang || "en"}
+          dir={RTL.has(result.lang) ? "rtl" : "ltr"}
+        >
           <div className="card">
             <div className="intel-title">
               <div>

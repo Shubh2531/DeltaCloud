@@ -4,7 +4,7 @@ import { getCandles, getQuotes } from "./stocks.js";
 import { queryNews } from "./news.js";
 import { getMarket, isCrypto } from "../lib/symbols.js";
 import { technicals, mood, risk, technicalCards, relatedNews, ruleExplanation, fmtPrice } from "../lib/intelRules.js";
-import { SYSTEM_PROMPT, buildUserMessage, parseAiReply, normalizeQuestion } from "../lib/intelPrompt.js";
+import { SYSTEM_PROMPT, buildUserMessage, parseAiReply, normalizeQuestion, languageOf } from "../lib/intelPrompt.js";
 
 export const DISCLAIMER =
   "DC Intelligence explains what already happened using real prices and news. It does not predict prices and is not financial advice.";
@@ -115,7 +115,7 @@ const factsFor = (t, marketOpen, market) => ({
   ...(market.kind === "stock" ? { "US market open now": marketOpen ? "yes" : "no (prices are from the last session)" } : {}),
 });
 
-async function build(market, question) {
+async function build(market, question, lang) {
   const { list, live, marketOpen } = await gather(market);
   const t = technicals(list, live);
   if (!t.price) throw new IntelError("Prices for this market are unavailable right now. Try again in a moment.", 503);
@@ -127,7 +127,7 @@ async function build(market, question) {
   let source = "rules";
   if (t.ready && aiAllowed()) {
     try {
-      explanation = await askAi(buildUserMessage({ market, facts: factsFor(t, marketOpen, market), mood: m, risk: r, news, question }));
+      explanation = await askAi(buildUserMessage({ market, facts: factsFor(t, marketOpen, market), mood: m, risk: r, news, question, lang }));
       if (explanation) source = "ai";
     } catch (err) {
       console.warn("DC Intelligence AI unavailable, using rules:", err.message);
@@ -147,21 +147,24 @@ async function build(market, question) {
     news,
     explanation,
     source,
+    // Built-in analysis is English only; the AI writes in the requested language.
+    lang: source === "ai" ? lang : "en",
     disclaimer: DISCLAIMER,
   };
 }
 
 // Explains one market, optionally answering a question about it. Results are shared between
 // users for a few minutes, so a popular coin costs one AI call, not one per person.
-export async function explain(symbol, question = "") {
+export async function explain(symbol, question = "", language = "en") {
+  const lang = languageOf(language);
   const market = getMarket(symbol);
   if (!market) throw new IntelError("Choose a supported market.");
   const q = String(question || "").trim().slice(0, 300);
-  const key = `${symbol}|${normalizeQuestion(q)}`;
+  const key = `${symbol}|${lang}|${normalizeQuestion(q)}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < CACHE_MS) return { ...hit.result, cached: true };
   if (inflight.has(key)) return inflight.get(key);
-  const p = build(market, q)
+  const p = build(market, q, lang)
     .then((result) => {
       cache.set(key, { result, at: Date.now() });
       if (cache.size > 1000) cache.delete(cache.keys().next().value);

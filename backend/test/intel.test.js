@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { rsi, technicals, mood, risk, technicalCards, relatedNews, ruleExplanation } from "../src/lib/intelRules.js";
-import { parseAiReply, buildUserMessage, normalizeQuestion } from "../src/lib/intelPrompt.js";
+import { parseAiReply, buildUserMessage, normalizeQuestion, languageOf, LANGUAGES } from "../src/lib/intelPrompt.js";
 
 const DAY = 86400000;
 const series = (closes) => closes.map((c, i) => ({ t: i * DAY, o: c, h: c * 1.01, l: c * 0.99, c, v: 1000 }));
@@ -104,4 +104,21 @@ test("prompt carries the computed facts and headlines, and says when there are n
   assert.match(msg, /none found/);
   assert.match(msg, /QUESTION: \(none\)/);
   assert.equal(normalizeQuestion("  Why is it DOWN?? "), "why is it down");
+});
+
+test("languages: known codes pass through, anything else falls back to English", () => {
+  assert.equal(languageOf("ne"), "ne");
+  assert.equal(languageOf("xx"), "en");
+  assert.equal(languageOf("__proto__"), "en");
+  assert.equal(LANGUAGES.ne, "Nepali");
+  const msg = buildUserMessage({
+    market: { name: "Bitcoin", base: "BTC", kind: "crypto" },
+    facts: {},
+    mood: { label: "Neutral", score: 0, parts: [] },
+    risk: { level: "Low", typicalDailyMove: 1 },
+    news: [],
+    question: "",
+    lang: "ne",
+  });
+  assert.match(msg, /^LANGUAGE: Nepali/);
 });

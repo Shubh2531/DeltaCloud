@@ -3,6 +3,7 @@ import rateLimit from "express-rate-limit";
 import { requireAuth } from "../middleware/auth.js";
 import { explain, intelStatus, IntelError } from "../services/intel.js";
 import { LIMITS, apiKey } from "../lib/limits.js";
+import { LANGUAGES } from "../lib/intelPrompt.js";
 
 const router = Router();
 router.use(requireAuth);
@@ -20,14 +21,15 @@ router.use(
   })
 );
 
-router.get("/status", (req, res) => res.json({ ok: true, ...intelStatus() }));
+router.get("/status", (req, res) => res.json({ ok: true, ...intelStatus(), languages: LANGUAGES }));
 
 // POST { symbol: "BTCUSDT" | "AAPL", question?: "Why is it down today?" }
 router.post("/explain", async (req, res, next) => {
   const symbol = String(req.body?.symbol || "").trim().toUpperCase();
   const question = typeof req.body?.question === "string" ? req.body.question : "";
   try {
-    res.json({ ok: true, ...(await explain(symbol, question)) });
+    const lang = typeof req.body?.lang === "string" ? req.body.lang : "en";
+    res.json({ ok: true, ...(await explain(symbol, question, lang)) });
   } catch (err) {
     if (err instanceof IntelError) return res.status(err.status).json({ ok: false, message: err.message });
     next(err);

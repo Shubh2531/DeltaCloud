@@ -1,5 +1,22 @@
 // Prompt and response handling for DC Intelligence's AI writer. Pure, so it can be tested.
 
+// Languages DC Intelligence can explain in. Code -> name the AI is told to write in.
+export const LANGUAGES = {
+  en: "English",
+  ne: "Nepali",
+  hi: "Hindi",
+  es: "Spanish",
+  zh: "Simplified Chinese",
+  ar: "Arabic",
+  bn: "Bengali",
+  pt: "Portuguese",
+  fr: "French",
+  ko: "Korean",
+  vi: "Vietnamese",
+  ur: "Urdu",
+};
+export const languageOf = (code) => (Object.hasOwn(LANGUAGES, code) ? code : "en");
+
 export const SYSTEM_PROMPT = `You are DC Intelligence, the explainer inside DeltaCloud, a learning and paper-trading app for new investors (many are college students).
 
 Your job: explain in plain, friendly English what a stock or cryptocurrency has been doing and the most likely reasons, using ONLY the facts and headlines you are given.
@@ -12,6 +29,7 @@ Rules you must follow:
 - Explain any jargon you use in a few words (for example: "RSI, a 0-100 gauge of how one-sided recent buying or selling has been").
 - Short sentences. No hype, no emojis. Reading level: a smart 16-year-old.
 - If the user's question asks for advice or predictions, gently say you can't give that, then answer the closest educational version of it.
+- Write every text value in the requested LANGUAGE, in natural everyday wording a local student would use. Keep the JSON keys in English. Keep tickers, numbers and source names exactly as given. The no-advice and no-prediction rules apply in every language.
 
 Reply with ONE JSON object and nothing else, with exactly these keys:
 {
@@ -25,8 +43,9 @@ Reply with ONE JSON object and nothing else, with exactly these keys:
 
 const ADVICE = /\b(you should (buy|sell|hold|invest)|(buy|sell) (it|now|this)|good (time|moment) to (buy|sell|invest)|price target|will (rise|fall|go up|go down|reach|hit) to)\b/i;
 
-export function buildUserMessage({ market, facts, mood, risk, news, question }) {
+export function buildUserMessage({ market, facts, mood, risk, news, question, lang = "en" }) {
   const lines = [
+    `LANGUAGE: ${LANGUAGES[languageOf(lang)]}`,
     `MARKET: ${market.name} (${market.base}), ${market.kind === "stock" ? "US stock" : "cryptocurrency"}`,
     "FACTS:",
     ...Object.entries(facts).map(([k, v]) => `- ${k}: ${v}`),
