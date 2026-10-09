@@ -15,6 +15,7 @@ const Portfolio = lazy(() => import("./pages/Portfolio"));
 const Journal = lazy(() => import("./pages/Journal"));
 const News = lazy(() => import("./pages/News"));
 const Insights = lazy(() => import("./pages/Insights"));
+const Intelligence = lazy(() => import("./pages/Intelligence"));
 const Compounding = lazy(() => import("./pages/Compounding"));
 const Settings = lazy(() => import("./pages/Settings"));
 
@@ -45,6 +46,7 @@ export default function App() {
         <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/journal" element={<Journal />} />
         <Route path="/news" element={<News />} />
+        <Route path="/intelligence" element={<Intelligence />} />
         <Route path="/insights" element={<Insights />} />
         <Route path="/ai-advisor" element={<Navigate to="/insights" replace />} />
         <Route path="/compounding" element={<Compounding />} />

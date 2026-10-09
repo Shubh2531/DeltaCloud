@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useMarket } from "../context/MarketContext";
 import { orbReading, biggestTick } from "../lib/orb";
 import DeltaOrb from "./DeltaOrb";
@@ -26,11 +27,11 @@ export default function OrbCard() {
   return (
     <div className="card dorb">
       <div className="dorb-head">
-        <h2 style={{ marginBottom: 0 }}>Delta Orb</h2>
+        <h2 style={{ marginBottom: 0 }}>DC Intelligence</h2>
         <p>{reading ? `${reading.moodNote} Markets are ${reading.direction}.` : "Waiting for prices."}</p>
       </div>
 
-      <DeltaOrb reading={reading} spike={spike} />
+      <DeltaOrb reading={reading} spike={spike} label="DC Intelligence" />
 
       {reading && (
         <>
@@ -84,6 +85,10 @@ export default function OrbCard() {
           </div>
         </>
       )}
+
+      <Link to="/intelligence" className="btn btn-primary btn-block" style={{ textAlign: "center" }}>
+        Ask DC Intelligence about any coin or stock
+      </Link>
 
       <p className="dorb-foot">
         Each dot is a market, green when it is up on the day and red when it is down. The surface ripples harder when
