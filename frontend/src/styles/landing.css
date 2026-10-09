@@ -1,9 +1,9 @@
 /* Landing page. All selectors are prefixed lp- so they never collide with the app. */
 .lp {
   --ink: #060a14; --ink-2: #0a1020; --paper: #eef1f6; --paper-ink: #0b1220; --paper-mute: #4a5568;
-  --display: "Bricolage Grotesque", Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --display: Unbounded, Sora, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   min-height: 100vh; color: var(--text);
-  background: radial-gradient(900px 520px at 80% 0%, rgba(0, 229, 180, 0.10), transparent 70%) no-repeat, var(--ink);
+  background: radial-gradient(900px 520px at 80% 0%, rgba(var(--accent-rgb), 0.10), transparent 70%) no-repeat, var(--ink);
   padding-top: env(safe-area-inset-top); overflow-x: clip;
 }
 .lp h1, .lp h2, .lp h3 { font-family: var(--display); letter-spacing: -0.02em; }
@@ -154,7 +154,7 @@
 /* ---------- Aurora, facts, ring, showcase ---------- */
 .lp-aurora { position: absolute; inset: 0; z-index: -2; pointer-events: none; filter: blur(60px); opacity: .75;
   background:
-    radial-gradient(40% 50% at 20% 30%, rgba(0, 229, 180, 0.22), transparent 70%),
+    radial-gradient(40% 50% at 20% 30%, rgba(var(--accent-rgb), 0.22), transparent 70%),
     radial-gradient(35% 45% at 80% 20%, rgba(91, 124, 250, 0.26), transparent 70%),
     radial-gradient(30% 40% at 60% 85%, rgba(168, 85, 247, 0.16), transparent 70%);
   animation: lpAurora 18s ease-in-out infinite alternate; }
@@ -184,7 +184,7 @@
   background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.025)); box-shadow: 0 30px 70px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.1);
   transition: transform .5s cubic-bezier(.2,.7,.2,1), border-color .3s; transform: rotateY(var(--tilt, 0deg)); }
 .lp-panel:nth-child(1) { --tilt: 8deg; } .lp-panel:nth-child(3) { --tilt: -8deg; }
-.lp-panel:hover { transform: rotateY(0) translateY(-6px); border-color: rgba(0,229,180,.4); }
+.lp-panel:hover { transform: rotateY(0) translateY(-6px); border-color: rgba(var(--accent-rgb),.4); }
 .lp-panel h3 { font-size: 18px; }
 .lp-panel p { margin: 0; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.04); font-size: 15px; line-height: 1.4; color: #cbd5e1; }
 .lp-panel small { color: var(--faint); }

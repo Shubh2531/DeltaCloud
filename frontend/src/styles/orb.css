@@ -11,8 +11,8 @@
 .dorb-meter b { color: var(--text); font-size: 15px; font-weight: 600; }
 .dorb-bar { position: relative; height: 6px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; }
 .dorb-bar i { position: absolute; top: 0; bottom: 0; border-radius: 6px; transition: all .6s ease; }
-.dorb-tip { padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(0,229,180,.25); background: rgba(0,229,180,.06); font-size: 14px; line-height: 1.5; }
-.dorb-tip b { display: block; margin-bottom: 2px; font-size: 13px; color: var(--accent, #00e5b4); }
+.dorb-tip { padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(var(--accent-rgb),.25); background: rgba(var(--accent-rgb),.06); font-size: 14px; line-height: 1.5; }
+.dorb-tip b { display: block; margin-bottom: 2px; font-size: 13px; color: var(--accent, var(--accent)); }
 .dorb-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .dorb-chip { padding: 5px 10px; border-radius: 999px; font-size: 12.5px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); }
 .dorb-chip.up { color: #4ade80; border-color: rgba(74,222,128,.35); }
