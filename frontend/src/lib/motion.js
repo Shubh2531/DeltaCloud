@@ -1,55 +1,64 @@
-// Global motion engine: every page's sections ripple in as they scroll into view, cards
-// get a 3D tilt following the pointer, and new pages auto-stage on route change.
-// Honors prefers-reduced-motion.
+// Global motion engine. On every page, every section rises up slowly as it scrolls into
+// view. Cards tilt subtly to the pointer. Honors prefers-reduced-motion.
+//
+// Timing matters here. We must give the browser a chance to paint the initial off-stage
+// state BEFORE the IntersectionObserver fires, otherwise the "transition" happens too
+// fast to see. So:
+//   1. Mark the element with data-motion (initial state, kept via a frame).
+//   2. requestAnimationFrame → requestAnimationFrame → observer.observe(el).
+// Two frames guarantee at least one paint of the hidden state first.
 
 const SHOWN = "motion-in";
 const CARD_SEL = ".card, .fd-tile, .intel-tech-item, .passkey-list li, .settings-nav-item";
-
-// Grid wrappers whose own box shouldn't animate — their CELLS do, with a nested stagger.
-// This stops a grid of cards from double-animating (wrapper + cards).
-const GRID_SEL = ".cols-even, .fd-charts, .fd-tiles, .intel-grid, .settings-cards, .intel-top, .fd-plot";
+const GRID_SEL = ".cols-even, .fd-charts, .fd-tiles, .intel-grid, .settings-cards, .intel-top";
 
 let observer = null;
 let mutations = null;
 let tiltCleanup = null;
 
-function stage(el, kind, delay) {
+function later(fn) {
+  requestAnimationFrame(() => requestAnimationFrame(fn));
+}
+
+function stage(el, delay) {
   if (!el || el.hasAttribute("data-motion") || el.classList.contains("ticker")) return;
-  el.setAttribute("data-motion", kind || "up");
-  if (!el.style.getPropertyValue("--motion-delay")) {
-    el.style.setProperty("--motion-delay", `${Math.min(delay, 900)}ms`);
-  }
-  observer?.observe(el);
+  el.setAttribute("data-motion", "up");
+  el.style.setProperty("--motion-delay", `${Math.min(delay, 1200)}ms`);
+  // Defer the first intersection callback until after the browser has painted the hidden
+  // state once; otherwise the opacity-0→1 transition is skipped on fresh page loads.
+  later(() => observer?.observe(el));
 }
 
 function stagePage(page) {
   const kids = Array.from(page.children);
   kids.forEach((kid, i) => {
-    const base = i * 110;
+    const base = i * 180;
     if (kid.matches?.(GRID_SEL)) {
-      // The grid wrapper itself is transparent; its cells ripple with a nested stagger.
-      Array.from(kid.children).forEach((cell, j) => stage(cell, "up", base + j * 90));
+      // Grid wrappers don't animate themselves; their cells ripple in with a nested stagger.
+      Array.from(kid.children).forEach((cell, j) => stage(cell, base + j * 140));
     } else {
-      stage(kid, "up", base);
+      stage(kid, base);
     }
   });
 }
 
-// Find pages inside a root and stage them. Also stages the root if it IS a page.
 function prepare(root) {
-  const pages = root.matches?.(".page, [data-stage] > .page")
-    ? [root]
-    : Array.from(root.querySelectorAll?.(".page") || []);
-  if (pages.length === 0 && root.matches?.("[data-stage]")) {
-    // Non-page stage (e.g. landing page main): stage its own direct children.
-    const kids = Array.from(root.children);
-    kids.forEach((kid, i) => stage(kid, "up", i * 120));
+  if (!root || !root.matches) return;
+  if (root.matches(".page")) {
+    stagePage(root);
     return;
   }
-  pages.forEach(stagePage);
+  const pages = root.querySelectorAll?.(".page");
+  if (pages && pages.length) {
+    pages.forEach(stagePage);
+    return;
+  }
+  if (root.matches("[data-stage]")) {
+    // Landing / sign-in: no .page inside, animate direct children.
+    Array.from(root.children).forEach((kid, i) => stage(kid, i * 200));
+  }
 }
 
-// Subtle 3D tilt following the pointer: cards feel like glass sheets, not stickers.
 function startTilt() {
   const canTilt = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   if (!canTilt) return () => {};
@@ -96,21 +105,29 @@ export function startMotion() {
         }
       }
     },
-    { rootMargin: "0px 0px -6% 0px", threshold: 0.01 }
+    // Lower threshold + a small negative bottom margin: elements must actually come into
+    // view before they reveal, so content below the fold waits until you scroll.
+    { rootMargin: "0px 0px -12% 0px", threshold: 0.08 }
   );
-  // Prepare anything already in the DOM.
-  document.querySelectorAll(".page, [data-stage]").forEach(prepare);
-  // SPA navigation: when a new page is swapped in, stage it the same way.
+
+  const preparePresent = () => document.querySelectorAll(".page, [data-stage]").forEach(prepare);
+  preparePresent();
+
   mutations = new MutationObserver((list) => {
     for (const m of list) {
       for (const node of m.addedNodes) {
         if (!(node instanceof HTMLElement)) continue;
-        if (node.matches?.(".page") || node.matches?.("[data-stage]")) prepare(node);
-        node.querySelectorAll?.(".page, [data-stage]").forEach(prepare);
+        if (node.matches?.(".page") || node.matches?.("[data-stage]")) {
+          prepare(node);
+          continue;
+        }
+        const nested = node.querySelectorAll?.(".page, [data-stage]");
+        if (nested && nested.length) nested.forEach(prepare);
       }
     }
   });
   mutations.observe(document.body, { childList: true, subtree: true });
+
   tiltCleanup = startTilt();
 }
 
