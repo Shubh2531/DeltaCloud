@@ -7,6 +7,7 @@ import PriceList from "../components/PriceList";
 import TradingViewChart from "../components/TradingViewChart";
 import OrbCard from "../components/OrbCard";
 import InviteCard from "../components/InviteCard";
+import PasskeyCard from "../components/PasskeyCard";
 import PacingCard from "../components/PacingCard";
 import Disclaimer from "../components/Disclaimer";
 import { useNews } from "../hooks/useNews";
@@ -71,6 +72,7 @@ export default function Dashboard() {
         </div>
 
         <div style={{ display: "grid", gap: 18 }}>
+          <PasskeyCard compact />
           <OrbCard />
           <InviteCard />
           <div className="card">

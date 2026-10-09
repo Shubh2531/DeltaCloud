@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import api, { errorMessage } from "../lib/api";
 import AuthShell from "../components/AuthShell";
+import { useAuth } from "../context/AuthContext";
+import { passkeysAvailable, passkeyLabel, getPasskey, cancelled } from "../lib/passkey";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,6 +15,26 @@ export default function Login() {
   const [error, setError] = useState("");
 
   const notice = location.state?.notice;
+  const { login } = useAuth();
+  const [faceLoading, setFaceLoading] = useState(false);
+  const canPasskey = passkeysAvailable();
+
+  // One tap: Face ID / fingerprint, no password and no emailed code.
+  const signInWithPasskey = async () => {
+    if (faceLoading) return;
+    setFaceLoading(true);
+    setError("");
+    try {
+      const { data: start } = await api.post("/auth/passkey/login/options");
+      const response = await getPasskey(start.options);
+      const { data } = await api.post("/auth/passkey/login/verify", { response, challengeToken: start.challengeToken });
+      login(data);
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      if (!cancelled(err)) setError(err?.response ? errorMessage(err) : "Face ID sign-in didn't work on this device. Use your email instead.");
+      setFaceLoading(false);
+    }
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -47,6 +69,16 @@ export default function Login() {
         </div>
       }
     >
+      {canPasskey && (
+        <>
+          <button type="button" className="btn btn-primary btn-block passkey-btn" onClick={signInWithPasskey} disabled={faceLoading}>
+            {faceLoading ? "Waiting for you…" : `Sign in with ${passkeyLabel()}`}
+          </button>
+          <div className="or-line">
+            <span>or use your email</span>
+          </div>
+        </>
+      )}
       <form onSubmit={submit}>
         <input
           className="input"

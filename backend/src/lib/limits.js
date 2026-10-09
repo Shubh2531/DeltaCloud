@@ -44,3 +44,10 @@ export function apiKey(req) {
   const match = /^Bearer\s+(\S{20,})$/i.exec(header);
   return match ? `t:${match[1].slice(-32)}` : `ip:${ipOf(req)}`;
 }
+
+// Key for passkey sign-in: one bucket per passkey on a given network (options requests,
+// which carry no passkey yet, share the network's bucket only through the per-IP ceiling).
+export function passkeyKey(req) {
+  const id = clip(req?.body?.response?.id, 200);
+  return id ? `${ipOf(req)}|pk:${id}` : `${ipOf(req)}|pk-options|${Math.floor(Date.now() / 1000)}`;
+}

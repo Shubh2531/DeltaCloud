@@ -19,7 +19,7 @@ import intelRoutes from "./routes/intel.routes.js";
 import growthRoutes from "./routes/growth.routes.js";
 import { startStocks, stopStocks } from "./services/stocks.js";
 import { liveSnapshot } from "./services/prices.js";
-import { LIMITS, apiKey, authKey, ipOf } from "./lib/limits.js";
+import { LIMITS, apiKey, authKey, ipOf, passkeyKey } from "./lib/limits.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -51,6 +51,8 @@ const authPerPerson = limiter(LIMITS.authPerPerson, authKey);
 for (const path of ["login", "register", "verify-otp", "resend-otp", "forgot-password", "reset-password"]) {
   app.use(`/api/auth/${path}`, authPerIp, authPerPerson);
 }
+// Passkey sign-in has no email, so it's limited per network (generous) and per passkey.
+app.use("/api/auth/passkey/login", authPerIp, limiter(LIMITS.authPerPerson, passkeyKey));
 
 /* ---------------- Routes ---------------- */
 app.get("/health", (req, res) => {

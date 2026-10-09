@@ -29,6 +29,24 @@ const UserSchema = new mongoose.Schema(
     refCode: { type: String },
     source: { type: String },
     referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+
+    // Passkeys (Face ID, Touch ID, fingerprint, Windows Hello). Only the public key is stored;
+    // the private key never leaves the person's device.
+    passkeys: {
+      type: [
+        {
+          credId: { type: String, required: true },
+          publicKey: { type: Buffer, required: true },
+          counter: { type: Number, default: 0 },
+          transports: { type: [String], default: [] },
+          name: { type: String, default: "" },
+          createdAt: { type: Date, default: Date.now },
+          lastUsedAt: { type: Date },
+        },
+      ],
+      default: [],
+      select: false,
+    },
   },
   { timestamps: true }
 );
@@ -37,5 +55,6 @@ const UserSchema = new mongoose.Schema(
 UserSchema.index({ name: 1, dob: 1 });
 UserSchema.index({ refCode: 1 }, { unique: true, partialFilterExpression: { refCode: { $type: "string" } } });
 UserSchema.index({ referredBy: 1 });
+UserSchema.index({ "passkeys.credId": 1 }, { unique: true, partialFilterExpression: { "passkeys.credId": { $type: "string" } } });
 
 export default mongoose.model("User", UserSchema);

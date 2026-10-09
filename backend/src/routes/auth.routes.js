@@ -8,7 +8,15 @@ import { hashToken, startSession, verifyRefresh } from "../services/tokens.js";
 import { requireAuth } from "../middleware/auth.js";
 import { normalizeEmail, cleanName, validatePassword, validateDob, isOtp } from "../lib/validators.js";
 import { cleanSource, isRefCode } from "../lib/growth.js";
-import { ensureRefCode } from "../services/growth.js";
+import { ensureRefCode, markActive } from "../services/growth.js";
+import {
+  registrationOptions,
+  finishRegistration,
+  authenticationOptions,
+  finishAuthentication,
+  listPasskeys,
+  PasskeyError,
+} from "../services/passkeys.js";
 
 const router = Router();
 
@@ -248,5 +256,75 @@ router.get(
     return res.json({ ok: true, user: publicUser(user) });
   })
 );
+
+/* ---------------- Passkeys: sign in with Face ID / fingerprint ---------------- */
+const passkeyFail = (res, err, next) =>
+  err instanceof PasskeyError ? fail(res, err.status, err.message) : next(err);
+
+// Signed in: start turning on Face ID for this device.
+router.post("/passkey/register/options", requireAuth, async (req, res, next) => {
+  try {
+    const user = await User.findById(req.userId).select("+passkeys");
+    if (!user) return fail(res, 401, "Your session has expired. Sign in again.");
+    return res.json({ ok: true, ...(await registrationOptions(user)) });
+  } catch (err) {
+    return passkeyFail(res, err, next);
+  }
+});
+
+router.post("/passkey/register/verify", requireAuth, async (req, res, next) => {
+  try {
+    const user = await User.findById(req.userId).select("+passkeys");
+    if (!user) return fail(res, 401, "Your session has expired. Sign in again.");
+    await finishRegistration(user, req.body || {}, req.get("user-agent"));
+    return res.json({ ok: true, message: "Face ID is on. Next time, sign in with one tap.", passkeys: listPasskeys(user) });
+  } catch (err) {
+    return passkeyFail(res, err, next);
+  }
+});
+
+router.get("/passkeys", requireAuth, async (req, res, next) => {
+  try {
+    const user = await User.findById(req.userId).select("+passkeys");
+    if (!user) return fail(res, 401, "Your session has expired. Sign in again.");
+    return res.json({ ok: true, passkeys: listPasskeys(user) });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+router.delete("/passkeys/:id", requireAuth, async (req, res, next) => {
+  try {
+    const user = await User.findById(req.userId).select("+passkeys");
+    if (!user) return fail(res, 401, "Your session has expired. Sign in again.");
+    user.passkeys = user.passkeys.filter((p) => p.credId !== req.params.id);
+    await user.save();
+    return res.json({ ok: true, passkeys: listPasskeys(user) });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// Signed out: sign in with a passkey. No email or password needed.
+router.post("/passkey/login/options", async (req, res, next) => {
+  try {
+    return res.json({ ok: true, ...(await authenticationOptions()) });
+  } catch (err) {
+    return passkeyFail(res, err, next);
+  }
+});
+
+router.post("/passkey/login/verify", async (req, res, next) => {
+  try {
+    const user = await finishAuthentication(req.body || {}, (credId) =>
+      User.findOne({ "passkeys.credId": credId, isVerified: true }).select("+passkeys +refreshHashes")
+    );
+    const tokens = await startSession(user); // also saves the passkey's new counter
+    markActive(user._id);
+    return res.json({ ok: true, ...tokens, user: publicUser(user) });
+  } catch (err) {
+    return passkeyFail(res, err, next);
+  }
+});
 
 export default router;

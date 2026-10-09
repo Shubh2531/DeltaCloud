@@ -21,6 +21,7 @@ test("routes and services load", { skip: !installed && "packages not installed" 
     "../src/routes/intel.routes.js",
     "../src/routes/growth.routes.js",
     "../src/services/growth.js",
+    "../src/services/passkeys.js",
     "../src/routes/auth.routes.js",
     "../src/services/prices.js",
     "../src/services/intel.js",
@@ -32,6 +33,10 @@ test("routes and services load", { skip: !installed && "packages not installed" 
   const { liveSnapshot } = await import("../src/services/prices.js");
   const snap = liveSnapshot();
   assert.ok(snap.prices && snap.mode);
+  const { authenticationOptions, deviceName } = await import("../src/services/passkeys.js");
+  const login = await authenticationOptions();
+  assert.ok(login.options.challenge && login.challengeToken);
+  assert.equal(deviceName("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)"), "iPhone");
   const { intelStatus } = await import("../src/services/intel.js");
   assert.equal(typeof intelStatus().ai, "boolean");
 });
