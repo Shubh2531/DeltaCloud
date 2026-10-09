@@ -1,36 +1,55 @@
-// A single IntersectionObserver watches every page and reveals children as they come
-// into view. Nothing to add to each page — the layout wraps a container with [data-stage]
-// and everything inside animates in order. Honors prefers-reduced-motion.
+// Global motion engine: every page's sections ripple in as they scroll into view, cards
+// get a 3D tilt following the pointer, and new pages auto-stage on route change.
+// Honors prefers-reduced-motion.
 
 const SHOWN = "motion-in";
-const STAGE_SEL = "[data-stage]";
 const CARD_SEL = ".card, .fd-tile, .intel-tech-item, .passkey-list li, .settings-nav-item";
+
+// Grid wrappers whose own box shouldn't animate — their CELLS do, with a nested stagger.
+// This stops a grid of cards from double-animating (wrapper + cards).
+const GRID_SEL = ".cols-even, .fd-charts, .fd-tiles, .intel-grid, .settings-cards, .intel-top, .fd-plot";
 
 let observer = null;
 let mutations = null;
 let tiltCleanup = null;
 
-function reveal(el) {
-  if (el.classList.contains(SHOWN)) return;
-  el.classList.add(SHOWN);
+function stage(el, kind, delay) {
+  if (!el || el.hasAttribute("data-motion") || el.classList.contains("ticker")) return;
+  el.setAttribute("data-motion", kind || "up");
+  if (!el.style.getPropertyValue("--motion-delay")) {
+    el.style.setProperty("--motion-delay", `${Math.min(delay, 900)}ms`);
+  }
+  observer?.observe(el);
 }
 
-function prepare(stage) {
-  // Give every direct child of the stage a stagger index, so they ripple in.
-  const kids = Array.from(stage.children);
+function stagePage(page) {
+  const kids = Array.from(page.children);
   kids.forEach((kid, i) => {
-    if (!kid.hasAttribute("data-motion")) kid.setAttribute("data-motion", "up");
-    if (!kid.style.getPropertyValue("--motion-delay")) {
-      kid.style.setProperty("--motion-delay", `${Math.min(i * 60, 480)}ms`);
+    const base = i * 110;
+    if (kid.matches?.(GRID_SEL)) {
+      // The grid wrapper itself is transparent; its cells ripple with a nested stagger.
+      Array.from(kid.children).forEach((cell, j) => stage(cell, "up", base + j * 90));
+    } else {
+      stage(kid, "up", base);
     }
   });
-  // Watch every direct child + any grid cell inside .cols-even that showed up later.
-  const toWatch = stage.querySelectorAll("[data-motion], .card");
-  toWatch.forEach((el) => observer?.observe(el));
+}
+
+// Find pages inside a root and stage them. Also stages the root if it IS a page.
+function prepare(root) {
+  const pages = root.matches?.(".page, [data-stage] > .page")
+    ? [root]
+    : Array.from(root.querySelectorAll?.(".page") || []);
+  if (pages.length === 0 && root.matches?.("[data-stage]")) {
+    // Non-page stage (e.g. landing page main): stage its own direct children.
+    const kids = Array.from(root.children);
+    kids.forEach((kid, i) => stage(kid, "up", i * 120));
+    return;
+  }
+  pages.forEach(stagePage);
 }
 
 // Subtle 3D tilt following the pointer: cards feel like glass sheets, not stickers.
-// Pointer-coarse (touch) devices skip it, since there's no hover.
 function startTilt() {
   const canTilt = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   if (!canTilt) return () => {};
@@ -65,7 +84,6 @@ export function startMotion() {
   if (observer) return;
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduce) {
-    // Show everything right away; no watcher, no tilt.
     document.documentElement.classList.add("motion-reduce");
     return;
   }
@@ -73,21 +91,22 @@ export function startMotion() {
     (entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
-          reveal(entry.target);
+          entry.target.classList.add(SHOWN);
           observer.unobserve(entry.target);
         }
       }
     },
-    { rootMargin: "0px 0px -8% 0px", threshold: 0.01 }
+    { rootMargin: "0px 0px -6% 0px", threshold: 0.01 }
   );
-  // Watch stages that already exist and any that get added later (SPA navigation).
-  document.querySelectorAll(STAGE_SEL).forEach(prepare);
+  // Prepare anything already in the DOM.
+  document.querySelectorAll(".page, [data-stage]").forEach(prepare);
+  // SPA navigation: when a new page is swapped in, stage it the same way.
   mutations = new MutationObserver((list) => {
     for (const m of list) {
       for (const node of m.addedNodes) {
         if (!(node instanceof HTMLElement)) continue;
-        if (node.matches?.(STAGE_SEL)) prepare(node);
-        node.querySelectorAll?.(STAGE_SEL).forEach(prepare);
+        if (node.matches?.(".page") || node.matches?.("[data-stage]")) prepare(node);
+        node.querySelectorAll?.(".page, [data-stage]").forEach(prepare);
       }
     }
   });
