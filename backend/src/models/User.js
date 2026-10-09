@@ -47,6 +47,28 @@ const UserSchema = new mongoose.Schema(
       default: [],
       select: false,
     },
+
+    // How the user wants DeltaCloud presented to them. All settings are optional and the
+    // app falls back to sensible defaults, so a user from before this field existed is fine.
+    preferences: {
+      type: {
+        language: { type: String, default: "en" }, // dc intelligence language
+        currency: { type: String, default: "USD" }, // display currency on prices and portfolio
+        theme: { type: String, default: "observatory" }, // observatory | aurora | midnight
+        reducedMotion: { type: Boolean, default: false },
+        marketingEmails: { type: Boolean, default: true },
+        productEmails: { type: Boolean, default: true },
+        tradeNotifications: { type: Boolean, default: true },
+        priceAlerts: { type: Boolean, default: true },
+        weeklyDigest: { type: Boolean, default: true },
+        shareInLeaderboard: { type: Boolean, default: false },
+        // What to show by default on the dashboard: everything, just crypto, just stocks.
+        defaultView: { type: String, default: "all" },
+        // Which quick symbol opens on the dashboard chart.
+        defaultSymbol: { type: String, default: "BTCUSDT" },
+      },
+      default: () => ({}),
+    },
   },
   { timestamps: true }
 );
