@@ -185,7 +185,7 @@ export default function Landing() {
         </nav>
       </header>
 
-      <main>
+      <main data-stage>
         <section className="lp-hero">
           <div className="lp-aurora" aria-hidden="true" />
           <WaveField />

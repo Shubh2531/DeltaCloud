@@ -49,7 +49,7 @@ export default function DeltaLayout() {
       <main className="main" id="main">
         <MarketTicker />
         <Suspense fallback={<div className="page muted">Loading…</div>}>
-          <Outlet />
+          <div data-stage><Outlet /></div>
         </Suspense>
       </main>
 

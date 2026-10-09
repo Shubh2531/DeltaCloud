@@ -8,11 +8,16 @@ import { MarketProvider } from "./context/MarketContext";
 
 import "./styles/index.css";
 import "./styles/future.css";
+import "./styles/motion.css";
 import "./styles/settings.css";
 import { captureAttribution } from "./lib/attribution";
+import { startMotion } from "./lib/motion";
 
 // Remember an invite link or tagged link (?src=) before anything else runs.
 captureAttribution();
+
+// Reveal elements as they scroll into view; add subtle 3D tilt to cards.
+startMotion();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
