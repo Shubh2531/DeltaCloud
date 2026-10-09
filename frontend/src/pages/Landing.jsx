@@ -270,7 +270,6 @@ export default function Landing() {
 
       <footer className="lp-foot">
         <div className="lp-brand"><span className="lp-mark" aria-hidden="true">Δ</span> DeltaCloud</div>
-        <p>Prices may be delayed or simulated. Nothing on this site is investment advice.</p>
         <p className="lp-copy">© 2025 Delta Cloud</p>
       </footer>
     </div>
