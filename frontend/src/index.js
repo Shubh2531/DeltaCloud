@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
 import { MarketProvider } from "./context/MarketContext";
+import { LanguageProvider } from "./context/LanguageContext";
 
 import "./styles/index.css";
 import "./styles/future.css";
@@ -22,11 +23,13 @@ startMotion();
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter basename={process.env.PUBLIC_URL || "/"}>
-      <AuthProvider>
-        <MarketProvider>
-          <App />
-        </MarketProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <MarketProvider>
+            <App />
+          </MarketProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

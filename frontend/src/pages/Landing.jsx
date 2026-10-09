@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import api from "../lib/api";
 import { Link } from "react-router-dom";
 import WaveField from "../components/WaveField";
+import LanguagePicker from "../components/LanguagePicker";
+import { useLanguage } from "../context/LanguageContext";
 import "../styles/landing.css";
 
 const FEATURES = [
@@ -171,6 +173,7 @@ function useUserCount() {
 
 export default function Landing() {
   const users = useUserCount();
+  const { t } = useLanguage();
   return (
     <div className="lp">
       <header className="lp-nav">
@@ -180,7 +183,8 @@ export default function Landing() {
         <nav className="lp-nav-links" aria-label="Main">
           <a href="#features">What you can do</a>
           <a href="#install">Get the app</a>
-          <Link to="/login" className="lp-link">Sign in</Link>
+          <LanguagePicker className="lp-lang" />
+          <Link to="/login" className="lp-link">{t("common.signIn")}</Link>
           <Link to="/register" className="lp-btn lp-btn-sm">Start free</Link>
         </nav>
       </header>
@@ -190,13 +194,13 @@ export default function Landing() {
           <div className="lp-aurora" aria-hidden="true" />
           <WaveField />
           <div className="lp-hero-copy">
-            <h1>Learn how markets move before you risk a dollar.</h1>
+            <h1>{t("landing.heroTitle")}</h1>
             <p className="lp-lede">
               DeltaCloud gives you a $10,000 practice account, real prices for every coin and US stock, and DC Intelligence: it explains why markets moved, in plain words and in your language.
             </p>
             <div className="lp-cta">
-              <Link to="/register" className="lp-btn">Create a free account</Link>
-              <Link to="/login" className="lp-btn lp-btn-ghost">Sign in</Link>
+              <Link to="/register" className="lp-btn">{t("landing.ctaCreate")}</Link>
+              <Link to="/login" className="lp-btn lp-btn-ghost">{t("common.signIn")}</Link>
             </div>
             <p className="lp-fine">
               {Number.isFinite(users) && users >= 50 ? `${users.toLocaleString()} people learning with DeltaCloud. ` : ""}

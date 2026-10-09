@@ -22,7 +22,9 @@ const router = Router();
 
 const ah = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const fail = (res, status, message) => res.status(status).json({ ok: false, message });
-const publicUser = (u) => ({ id: String(u._id), name: u.name, email: u.email });
+// Includes the account's saved app language so a new device (or a fresh sign-in)
+// can switch to it immediately, without a trip to Settings first.
+const publicUser = (u) => ({ id: String(u._id), name: u.name, email: u.email, language: u.preferences?.language || "en" });
 
 // Compared against when the email is unknown so response time doesn't reveal it.
 const DUMMY_HASH = bcrypt.hashSync("not-a-real-password-1", 10);

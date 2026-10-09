@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import api, { errorMessage } from "../lib/api";
 import AuthShell from "../components/AuthShell";
 import { getAttribution } from "../lib/attribution";
+import { useLanguage } from "../context/LanguageContext";
 
 // Bounds for the date-of-birth field: must be 18+ and not absurdly old.
 function dobBounds() {
@@ -23,6 +24,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { t } = useLanguage();
 
   const submit = async (e) => {
     e.preventDefault();
@@ -52,7 +54,7 @@ export default function Register() {
       footer={
         <div className="auth-actions">
           <span className="muted">Already have an account?</span>
-          <Link to="/login">Sign in</Link>
+          <Link to="/login">{t("common.signIn")}</Link>
         </div>
       }
     >
@@ -113,7 +115,7 @@ export default function Register() {
           </button>
         </div>
         <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-          {loading ? "Creating account…" : "Create account"}
+          {loading ? "Creating account…" : t("common.createAccount")}
         </button>
       </form>
       {error && <p className="message error" role="alert">{error}</p>}

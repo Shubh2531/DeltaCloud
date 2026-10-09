@@ -4,6 +4,7 @@ import api, { errorMessage } from "../lib/api";
 import AuthShell from "../components/AuthShell";
 import { useAuth } from "../context/AuthContext";
 import { passkeysAvailable, biometricStatus, passkeyLabel, biometricHelp, getPasskey, cancelled, devicePasskey, forgetDevicePasskey } from "../lib/passkey";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function Login() {
 
   const notice = location.state?.notice;
   const { login } = useAuth();
+  const { t } = useLanguage();
   const [faceLoading, setFaceLoading] = useState(false);
   // Everyone sees the option. It only works on a device with a face or fingerprint sensor
   // where Face ID was turned on for DeltaCloud; otherwise it explains why, never a QR code.
@@ -86,13 +88,13 @@ export default function Login() {
 
   return (
     <AuthShell
-      title="Welcome back"
+      title={t("auth.welcomeBack")}
       subtitle="Sign in to DeltaCloud. We'll email you a code to finish."
       footer={
         <div className="auth-actions">
-          <Link to="/register">Create account</Link>
+          <Link to="/register">{t("common.createAccount")}</Link>
           <Link to="/forgot-password" className="warm">
-            Forgot password?
+            {t("auth.forgotPassword")}
           </Link>
         </div>
       }
@@ -135,7 +137,7 @@ export default function Login() {
           </button>
         </div>
         <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-          {loading ? "Sending code…" : "Continue"}
+          {loading ? "Sending code…" : t("auth.continue")}
         </button>
       </form>
       {notice && <p className="message ok" role="status">{notice}</p>}

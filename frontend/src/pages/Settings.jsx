@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api, { errorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
 import { useSettings } from "../hooks/useSettings";
 import FeedBadge from "../components/FeedBadge";
 import InviteCard from "../components/InviteCard";
@@ -330,9 +331,11 @@ function NotificationsSection({ data, updatePrefs, onToast }) {
 /* ---------- Display & Language ---------- */
 function DisplaySection({ data, options, updatePrefs, onToast }) {
   const p = data.preferences;
+  const { setLang } = useLanguage();
   const set = async (key, value) => {
     try {
       await updatePrefs({ [key]: value });
+      if (key === "language") setLang(value); // also switches the app's own menus/buttons, not just DC Intelligence
       onToast("Saved.", "ok");
     } catch (err) {
       onToast(errorMessage(err), "error");
@@ -342,8 +345,11 @@ function DisplaySection({ data, options, updatePrefs, onToast }) {
     <>
       <div className="card">
         <h3>Language</h3>
-        <p className="muted small">DC Intelligence explains the market in your language. Buttons and menus stay in English for now; translations coming.</p>
-        <Field label="Explain markets in">
+        <p className="muted small">
+          Sets the app's own menus and buttons, and the language DC Intelligence explains the market in. A growing set of languages is
+          translated; anything not yet translated shows in English.
+        </p>
+        <Field label="App language">
           <select className="input" value={p.language} onChange={(e) => set("language", e.target.value)}>
             {(options?.languages || Object.keys(LANG_NAMES)).map((code) => (
               <option key={code} value={code}>{LANG_NAMES[code] || code}</option>
@@ -556,6 +562,14 @@ export default function Settings() {
   const [toast, setToast] = useState({ msg: "", kind: "ok" });
   const showToast = (msg, kind) => setToast({ msg, kind });
   const navRef = useRef(null);
+  const { adoptServerLang } = useLanguage();
+
+  // Sign in on a new device, and this device picks up the language already saved
+  // to the account — not a blank slate every time.
+  useEffect(() => {
+    if (data?.preferences?.language) adoptServerLang(data.preferences.language);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.preferences?.language]);
 
   if (loading) {
     return (

@@ -1,11 +1,21 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import api, { tokens, savedUser } from "../lib/api";
+import { useLanguage } from "./LanguageContext";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { adoptServerLang } = useLanguage();
+
+  // Whenever a session resolves to a signed-in user (on start, or right after
+  // login), switch this device to the language already saved on their account —
+  // so a new phone or a fresh sign-in reads in their language immediately,
+  // not only after they happen to open Settings.
+  useEffect(() => {
+    if (user?.language) adoptServerLang(user.language);
+  }, [user, adoptServerLang]);
 
   // Restore the session on start. The server confirms the token is still good.
   useEffect(() => {

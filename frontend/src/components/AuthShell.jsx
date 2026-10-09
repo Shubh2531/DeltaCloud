@@ -1,3 +1,4 @@
+import LanguagePicker from "./LanguagePicker";
 import "../styles/auth.css";
 
 // Shared frame for sign-in screens: moving background, orb and a glass card.
@@ -7,6 +8,7 @@ export default function AuthShell({ title, subtitle, children, footer }) {
       <div className="plasma" aria-hidden="true" />
       <div className="ai-orb" aria-hidden="true" />
       <section className="auth-card">
+        <LanguagePicker className="auth-lang" />
         <h1>{title}</h1>
         {subtitle && <p className="subtitle">{subtitle}</p>}
         {children}

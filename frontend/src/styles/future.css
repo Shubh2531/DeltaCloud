@@ -189,3 +189,20 @@ h1, h2, h3, .brand, .page-head h1 { font-family: var(--display); }
 .lp-btn-ghost { background: transparent; box-shadow: none; border-color: rgba(233, 236, 255, 0.22); }
 .lp-btn-ghost:hover { background: rgba(233, 236, 255, 0.08); }
 .lp-brand > span:first-child, .lp-brand svg { filter: drop-shadow(0 0 10px rgba(94, 231, 255, 0.45)); }
+
+/* ---------- Language picker: shows up as early as the landing page ---------- */
+.lang-picker { display: inline-flex; align-items: center; gap: 6px; }
+.lang-picker select { min-width: 0; }
+.lang-picker-compact select {
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 999px;
+  background: rgba(150, 160, 255, 0.1);
+  border: 1px solid var(--line);
+  color: var(--text);
+  cursor: pointer;
+}
+.lp-lang { margin-left: 8px; }
+.auth-lang { position: absolute; top: 18px; right: 18px; }
+.auth-card { position: relative; }
+[dir="rtl"] .auth-lang { right: auto; left: 18px; }
