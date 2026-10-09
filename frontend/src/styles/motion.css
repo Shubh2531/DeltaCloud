@@ -319,14 +319,6 @@ body::after { opacity: 0 !important; }
 [data-motion="scale"] { transform: scale(0.88) translate3d(0, 20px, 0); }
 [data-motion="rise"] { transform: translate3d(0, 72px, 0) scale(0.93); filter: blur(16px); }
 
-/* Longer, more pronounced stagger between siblings. */
-[data-stage] > :nth-child(1) { --motion-delay: 0ms; }
-[data-stage] > :nth-child(2) { --motion-delay: 110ms; }
-[data-stage] > :nth-child(3) { --motion-delay: 220ms; }
-[data-stage] > :nth-child(4) { --motion-delay: 330ms; }
-[data-stage] > :nth-child(5) { --motion-delay: 440ms; }
-[data-stage] > :nth-child(6) { --motion-delay: 550ms; }
-[data-stage] > :nth-child(n+7) { --motion-delay: 660ms; }
 
 /* Pages fade in more slowly, with a longer rise. */
 .main > :not(.ticker) {
@@ -339,12 +331,14 @@ body::after { opacity: 0 !important; }
 
 /* ---------- Every card on every page drifts gently in place ---------- */
 /* Six staggered float timings so a grid of cards never moves in lockstep. */
-.page .card:nth-child(6n+1) { animation: drift-a 14s ease-in-out infinite; }
-.page .card:nth-child(6n+2) { animation: drift-b 16s ease-in-out infinite -2s; }
-.page .card:nth-child(6n+3) { animation: drift-c 18s ease-in-out infinite -5s; }
-.page .card:nth-child(6n+4) { animation: drift-a 15s ease-in-out infinite -7s; }
-.page .card:nth-child(6n+5) { animation: drift-b 17s ease-in-out infinite -3s; }
-.page .card:nth-child(6n+6) { animation: drift-c 19s ease-in-out infinite -9s; }
+/* The gentle in-place float only starts AFTER a card has finished revealing, so it
+   doesn't fight the slide-up transition. Six staggered timings keep the grid alive. */
+.page .card.motion-in:nth-child(6n+1) { animation: drift-a 14s ease-in-out infinite; }
+.page .card.motion-in:nth-child(6n+2) { animation: drift-b 16s ease-in-out infinite -2s; }
+.page .card.motion-in:nth-child(6n+3) { animation: drift-c 18s ease-in-out infinite -5s; }
+.page .card.motion-in:nth-child(6n+4) { animation: drift-a 15s ease-in-out infinite -7s; }
+.page .card.motion-in:nth-child(6n+5) { animation: drift-b 17s ease-in-out infinite -3s; }
+.page .card.motion-in:nth-child(6n+6) { animation: drift-c 19s ease-in-out infinite -9s; }
 .page .card.tilt-on { animation: none; } /* cursor tilt wins while hovering */
 @keyframes drift-a {
   0%, 100% { transform: translate3d(0, 0, 0) rotateX(0.4deg); }
