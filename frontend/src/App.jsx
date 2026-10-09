@@ -8,6 +8,7 @@ import Register from "./pages/Register";
 import VerifyOtp from "./pages/VerifyOtp";
 import ForgotPassword from "./pages/ForgotPassword";
 import DeltaLayout from "./layouts/DeltaLayout";
+import AppLockGate from "./components/AppLockGate";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Trading = lazy(() => import("./pages/Trading"));
@@ -42,22 +43,24 @@ export default function App() {
   }
 
   return (
-    <Routes>
-      <Route element={<DeltaLayout />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/trading" element={<Trading />} />
-        <Route path="/portfolio" element={<Portfolio />} />
-        <Route path="/journal" element={<Journal />} />
-        <Route path="/news" element={<News />} />
-        <Route path="/intelligence" element={<Intelligence />} />
-        <Route path="/insights" element={<Insights />} />
-        <Route path="/ai-advisor" element={<Navigate to="/insights" replace />} />
-        <Route path="/compounding" element={<Compounding />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/founder" element={<Founder />} />
-      </Route>
-      <Route path="/r/:code" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
-    </Routes>
+    <AppLockGate>
+      <Routes>
+        <Route element={<DeltaLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/trading" element={<Trading />} />
+          <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/journal" element={<Journal />} />
+          <Route path="/news" element={<News />} />
+          <Route path="/intelligence" element={<Intelligence />} />
+          <Route path="/insights" element={<Insights />} />
+          <Route path="/ai-advisor" element={<Navigate to="/insights" replace />} />
+          <Route path="/compounding" element={<Compounding />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/founder" element={<Founder />} />
+        </Route>
+        <Route path="/r/:code" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </AppLockGate>
   );
 }

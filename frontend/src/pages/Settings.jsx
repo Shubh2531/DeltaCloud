@@ -6,6 +6,7 @@ import { useSettings } from "../hooks/useSettings";
 import FeedBadge from "../components/FeedBadge";
 import InviteCard from "../components/InviteCard";
 import PasskeyCard from "../components/PasskeyCard";
+import AppLockCard from "../components/AppLockCard";
 import Disclaimer from "../components/Disclaimer";
 
 // Sections, in the order they appear in the sidebar.
@@ -286,6 +287,7 @@ function SecuritySection({ onToast }) {
   return (
     <>
       <PasskeyCard />
+      <AppLockCard />
       <PasswordCard onToast={onToast} />
       <SessionsCard onToast={onToast} />
     </>
