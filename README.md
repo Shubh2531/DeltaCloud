@@ -15,6 +15,7 @@ dc/
 - **Practice trading:** server-authoritative. The server sets the price; the client cannot.
   - **Spot:** buy and sell at the live price, no shorting.
   - **Leverage:** long or short at 2×–50×, isolated margin only — a position can never lose more than the margin put into it, and cash can never go negative. A position auto-closes ("liquidated") if the price crosses its liquidation level; see `backend/src/lib/leverageMath.js`.
+- **Trade journal:** every buy, sell, leveraged open, close, liquidation and account reset is written permanently to its own `TradeLog` collection, never trimmed or edited. Each entry is saved in the same database write as the trade itself (an outbox on the account) and then copied into the journal, so a trade can't exist without its record, and retries can't create duplicates. History from before the journal existed is copied in once per account. The Journal page shows totals (realised P/L, win rate, volume, liquidations, best and worst trade), filters, paging back to the first trade, and a CSV download. Endpoints: `GET /api/paper/journal?market=&symbol=&before=&limit=`, `GET /api/paper/journal/summary`, `GET /api/paper/journal/export`.
 - **Pace your trades:** a position-size helper on the dashboard that compares a spot slice of cash with the same slice used as leveraged margin, with no advice and no order placed.
 - **Insights:** rule-based readings of recent movement (short vs long average, change over the window, range). No buy/sell wording, always with a disclaimer.
 - **Growth Lab:** compound-growth calculator.
@@ -28,7 +29,7 @@ cd backend
 cp .env.example .env      # fill in MONGO_URI and two different 32+ char secrets
 npm install
 npm run dev               # http://localhost:8080
-npm test                  # 33 unit tests
+npm test                  # 45 unit tests
 ```
 
 With no SMTP configured, codes are printed in the backend console, and (non-production only) returned to the UI when `DEV_RETURN_OTP=true`.

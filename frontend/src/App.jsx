@@ -12,6 +12,7 @@ import DeltaLayout from "./layouts/DeltaLayout";
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Trading = lazy(() => import("./pages/Trading"));
 const Portfolio = lazy(() => import("./pages/Portfolio"));
+const Journal = lazy(() => import("./pages/Journal"));
 const News = lazy(() => import("./pages/News"));
 const Insights = lazy(() => import("./pages/Insights"));
 const Compounding = lazy(() => import("./pages/Compounding"));
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/trading" element={<Trading />} />
         <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/journal" element={<Journal />} />
         <Route path="/news" element={<News />} />
         <Route path="/insights" element={<Insights />} />
         <Route path="/ai-advisor" element={<Navigate to="/insights" replace />} />

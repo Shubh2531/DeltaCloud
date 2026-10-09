@@ -67,6 +67,12 @@ const PaperAccountSchema = new mongoose.Schema(
     leverageHistory: { type: [LeverageHistorySchema], default: [] },
     // Monotonically increasing, used to give each leveraged position a stable id.
     leverageSeq: { type: Number, default: 0 },
+    // Journal entries saved in the same write as the trade itself, then copied into the
+    // TradeLog collection and removed from here. If that copy fails, they stay here and
+    // are copied on the next request, so no trade can ever be missing from the journal.
+    journalOutbox: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    // Set once the history recorded before the journal existed has been copied into it.
+    journalBackfilled: { type: Boolean, default: false },
   },
   // Rejects a save if the document changed since it was read, so two orders
   // sent at the same moment cannot both spend the same cash.

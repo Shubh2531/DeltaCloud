@@ -19,6 +19,15 @@ const PATHS = {
       <path d="M15 3.6A9 9 0 0 1 20.4 9H15z" />
     </>
   ),
+  journal: (
+    <>
+      <path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z" />
+      <path d="M6 3v18" />
+      <path d="M10 8h5" />
+      <path d="M10 12h5" />
+      <path d="M10 16h3" />
+    </>
+  ),
   insights: <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z" />,
   news: (
     <>

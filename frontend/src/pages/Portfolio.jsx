@@ -6,6 +6,7 @@ import { marketById } from "../lib/symbols";
 import FeedBadge from "../components/FeedBadge";
 import Disclaimer from "../components/Disclaimer";
 import LeveragePositions from "../components/LeveragePositions";
+import JournalCard from "../components/JournalCard";
 import { usd, priceFmt, qtyFmt, signedUsd, pct, tone, timeFmt } from "../lib/format";
 
 const COLORS = ["#94a3b8", "#f2a900", "#627eea", "#14f195", "#5b7cfa", "#ff6b9d", "#c084fc"];
@@ -130,6 +131,8 @@ export default function Portfolio() {
               )}
             </div>
           </div>
+
+          <JournalCard />
 
           <LeveragePositions account={account} onAccount={setAccount} />
 

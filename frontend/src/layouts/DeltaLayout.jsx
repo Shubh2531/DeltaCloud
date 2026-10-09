@@ -8,6 +8,7 @@ const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: "dashboard" },
   { to: "/trading", label: "Trading", icon: "trading" },
   { to: "/portfolio", label: "Portfolio", icon: "portfolio" },
+  { to: "/journal", label: "Journal", icon: "journal", desktopOnly: true },
   { to: "/news", label: "News", icon: "news" },
   { to: "/insights", label: "Insights", icon: "insights" },
   { to: "/compounding", label: "Growth Lab", icon: "growth" },
@@ -52,7 +53,7 @@ export default function DeltaLayout() {
       </main>
 
       <nav className="bottom-nav" aria-label="Main">
-        {NAV.map((item) => (
+        {NAV.filter((item) => !item.desktopOnly).map((item) => (
           <NavLink key={item.to} to={item.to} className={linkClass("")}>
             <Icon name={item.icon} size={22} />
             {item.label.replace("Growth Lab", "Growth")}
