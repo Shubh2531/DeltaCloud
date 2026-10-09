@@ -55,22 +55,19 @@ Generate secrets with: `node -e "console.log(require('crypto').randomBytes(48).t
 | `BINANCE_API_BASE` | Defaults to Binance.US |
 | `DEV_RETURN_OTP` | Dev only; ignored in production |
 
-## Launch on GitHub (step by step)
+## Hosting
 
-GitHub Pages serves static files only, so the site has two parts: the **frontend on GitHub Pages** and the **backend on a small server** (Render's free tier works; `render.yaml` and `backend/Dockerfile` are included).
+The site has two parts, both deployed from this private repo:
 
-1. **Create a new GitHub repo** (private is fine to start), then from this folder:
-   ```bash
-   git remote add origin https://github.com/<you>/<repo>.git
-   git push -u origin main
-   ```
-2. **Database:** create a fresh MongoDB Atlas user and cluster (not the old exposed one). Allow the backend host in Network Access.
-3. **Backend:** on Render choose *New > Blueprint*, pick the repo. Fill the prompted values:
-   `MONGO_URI`, `SMTP_*`, `EMAIL_FROM`, and `CLIENT_ORIGINS=https://<you>.github.io` (origin only, no path). Secrets are generated for you. Check `https://<your-api>.onrender.com/health`.
-4. **Frontend:** repo *Settings > Pages > Source: GitHub Actions*. Then *Settings > Secrets and variables > Actions > Variables* and add:
-   - `REACT_APP_API_BASE_URL` = your backend URL (https)
-   - `PUBLIC_URL` = `/<repo>` for a project site, or leave empty for a custom domain / `<you>.github.io` repo
-5. Push to `main` (or run the *Deploy site to GitHub Pages* workflow). The site appears at `https://<you>.github.io/<repo>/`.
+- **Frontend:** Cloudflare Pages at **https://joindeltacloud.com** (and `www.`). Builds on every push to `main`.
+  - Root directory `frontend`, build command `npm run build`, output `build`
+  - Variables: `REACT_APP_API_BASE_URL=https://deltacloud.onrender.com`, `NODE_VERSION=22`, `CI=false`
+- **Backend:** Render (`render.yaml`, `backend/Dockerfile`). Check `https://deltacloud.onrender.com/health`.
+  - Fill `MONGO_URI`, `SMTP_*`, `EMAIL_FROM`; secrets are generated for you.
+  - `https://joindeltacloud.com` and `https://www.joindeltacloud.com` are always allowed to call the API; add any other origins to `CLIENT_ORIGINS` (origin only, no path).
+  - Use a paid instance in production; the free one sleeps after inactivity and the first request takes about a minute.
+
+Database: MongoDB Atlas. Allow the backend host in Network Access.
 
 CI (`.github/workflows/ci.yml`) runs the backend tests and a frontend build on every push. Never commit `.env`; it is git-ignored.
 
