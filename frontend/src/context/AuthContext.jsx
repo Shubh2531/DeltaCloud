@@ -66,9 +66,24 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  // After a profile change (name, email), keep the signed-in user up to date.
+  const updateUser = useCallback((patch) => {
+    setUser((prev) => {
+      const next = prev ? { ...prev, ...patch } : prev;
+      if (next) savedUser.set(next);
+      return next;
+    });
+  }, []);
+
+  // Clears this device's session without calling the server (e.g. after deleting the account).
+  const forget = useCallback(() => {
+    tokens.clear();
+    setUser(null);
+  }, []);
+
   const value = useMemo(
-    () => ({ user, loading, isAuthenticated: Boolean(user), login, logout }),
-    [user, loading, login, logout]
+    () => ({ user, loading, isAuthenticated: Boolean(user), login, logout, updateUser, forget }),
+    [user, loading, login, logout, updateUser, forget]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

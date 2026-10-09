@@ -1,0 +1,34 @@
+.set-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+.set-col { display: grid; gap: 16px; }
+.set-card { display: grid; gap: 14px; }
+.set-card h2 { margin-bottom: 0; }
+.set-card p { margin: 0; line-height: 1.55; }
+
+.set-row { display: grid; gap: 6px; }
+.set-label, .set-row > label { font-size: 13px; color: var(--muted); }
+.set-value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.set-inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.set-inline .input { flex: 1; min-width: 160px; }
+.set-sub { display: grid; gap: 8px; padding: 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); }
+.set-check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); cursor: pointer; }
+.set-check input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+.set-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; min-height: 44px; }
+.set-toggle b { display: block; font-weight: 600; }
+.set-toggle small { display: block; color: var(--muted); margin-top: 2px; }
+.set-toggle input {
+  appearance: none; -webkit-appearance: none; flex: none; width: 46px; height: 28px; border-radius: 999px;
+  background: rgba(150, 160, 255, 0.18); border: 1px solid var(--line); position: relative; cursor: pointer; transition: background 0.2s;
+}
+.set-toggle input::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; transition: transform 0.2s;
+}
+.set-toggle input:checked { background: var(--accent); border-color: transparent; }
+.set-toggle input:checked::after { transform: translateX(18px); }
+.set-toggle input:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
+.set-danger { border-color: rgba(255, 95, 138, 0.45); background: rgba(255, 95, 138, 0.06); }
+.set-note { margin: 0; font-size: 14px; }
+.set-note.ok { color: var(--pos); }
+.set-note.error { color: var(--neg); }
