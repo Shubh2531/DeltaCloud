@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api, { errorMessage } from "../lib/api";
 import AuthShell from "../components/AuthShell";
+import { getAttribution } from "../lib/attribution";
 
 // Bounds for the date-of-birth field: must be 18+ and not absurdly old.
 function dobBounds() {
@@ -29,7 +30,7 @@ export default function Register() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await api.post("/auth/register", { name, email, password, dob });
+      const { data } = await api.post("/auth/register", { name, email, password, dob, ...getAttribution() });
       const normalized = email.trim().toLowerCase();
       try {
         sessionStorage.setItem("dc_otp_email", normalized);

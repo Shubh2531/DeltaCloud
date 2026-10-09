@@ -269,3 +269,13 @@ table.table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .journal-card-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 6px 0 14px; }
 .journal-card-stats .k { font-size: 12.5px; color: var(--muted); }
 .journal-card-stats .v { font-size: 18px; font-weight: 700; }
+
+/* ---------- Invite card ---------- */
+.invite { display: grid; gap: 10px; }
+.invite h2 { margin-bottom: 0; }
+.invite p { margin: 0; }
+.invite-link { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.invite-link code {
+  flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; background: var(--panel-2);
+  border: 1px solid var(--line); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px;
+}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import api, { errorMessage } from "../lib/api";
-import { useMarket } from "../context/MarketContext";
+import { useMarket, useWatch } from "../context/MarketContext";
 
 // Adds live values (market value, profit and loss, equity) to the stored account.
 export function enrich(account, prices) {
@@ -70,6 +70,9 @@ export function usePaperAccount() {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  // Keep live prices coming for everything held, whatever coin or stock it is.
+  useWatch([...(raw?.holdings || []).map((h) => h.symbol), ...(raw?.leveragePositions || []).map((p) => p.symbol)]);
 
   const account = useMemo(() => enrich(raw, prices), [raw, prices]);
   return { account, setAccount: setRaw, loading, error, refresh };

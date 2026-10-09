@@ -43,6 +43,26 @@ export const config = {
     .map((s) => s.trim().replace(/\/.*$/, (m) => (m.startsWith("//") ? m : "")))
     .map((s) => s.replace(/^([a-z][a-z0-9+.-]*:\/\/[^/]+).*$/i, "$1").toLowerCase())
     .filter(Boolean),
+  // Cloudflare Pages preview builds (https://<hash>.deltacloud-55h.pages.dev) for testing changes.
+  clientOriginPatterns: [/^https:\/\/[a-z0-9-]+\.deltacloud-55h\.pages\.dev$/],
+  // US stocks and ETFs. Optional: without a key the app shows crypto only.
+  stocks: {
+    apiKey: process.env.TWELVEDATA_API_KEY || "",
+    apiBase: (process.env.TWELVEDATA_API_BASE || "https://api.twelvedata.com").replace(/\/+$/, ""),
+  },
+  // DC Intelligence. Optional: without a key, explanations come from built-in rules.
+  intel: {
+    apiKey: process.env.ANTHROPIC_API_KEY || "",
+    model: process.env.INTEL_MODEL || "claude-haiku-5-5",
+    // Hard daily cap on AI explanations, to protect the bill. Beyond it, rules take over.
+    dailyLimit: Number(process.env.INTEL_DAILY_LIMIT) || 2000,
+  },
+  // Who can open the founder dashboard (comma-separated emails).
+  founderEmails: (process.env.FOUNDER_EMAILS || "olishubham435@gmail.com")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean),
+  publicSiteUrl: (process.env.PUBLIC_SITE_URL || "https://joindeltacloud.com").replace(/\/+$/, ""),
   smtp: {
     host: process.env.SMTP_HOST || "",
     port: Number(process.env.SMTP_PORT) || 2525,

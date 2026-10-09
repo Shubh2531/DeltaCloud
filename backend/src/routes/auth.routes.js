@@ -7,6 +7,8 @@ import { sendOtpEmail } from "../services/mail.js";
 import { hashToken, startSession, verifyRefresh } from "../services/tokens.js";
 import { requireAuth } from "../middleware/auth.js";
 import { normalizeEmail, cleanName, validatePassword, validateDob, isOtp } from "../lib/validators.js";
+import { cleanSource, isRefCode } from "../lib/growth.js";
+import { ensureRefCode } from "../services/growth.js";
 
 const router = Router();
 
@@ -69,6 +71,11 @@ router.post(
       );
     }
 
+    // How they found us: a friend's invite code and/or a tagged link (club, class, flyer).
+    const source = cleanSource(req.body?.source);
+    const ref = String(req.body?.ref || "").toUpperCase();
+    const referrer = isRefCode(ref) ? await User.findOne({ refCode: ref, isVerified: true }).select("_id email") : null;
+
     const passwordHash = await bcrypt.hash(password, 10);
     if (user) {
       user.name = name;
@@ -77,6 +84,8 @@ router.post(
     } else {
       user = new User({ email, name, dob: dobResult.dob, passwordHash });
     }
+    if (!user.source && source) user.source = source;
+    if (!user.referredBy && referrer && referrer.email !== email) user.referredBy = referrer._id;
     await user.save();
 
     const result = await issueAndSend(user, "login");
@@ -135,8 +144,10 @@ router.post(
     const result = await checkOtp(user, otp, "login");
     if (!result.ok) return fail(res, 400, result.reason);
 
+    if (!user.isVerified) user.verifiedAt = new Date();
     user.isVerified = true;
     const tokens = await startSession(user);
+    ensureRefCode(user).catch(() => {}); // their own invite link, ready for later
     return res.json({ ok: true, ...tokens, user: publicUser(user) });
   })
 );

@@ -16,6 +16,8 @@ export const LIMITS = {
   authPerPerson: { windowMs: 15 * 60_000, limit: 20 },
   // Sign-in, sign-up and code steps from one IP: enough for a large room signing up at once.
   authPerIp: { windowMs: 15 * 60_000, limit: 2_000 },
+  // DC Intelligence questions per signed-in person.
+  intelPerUser: { windowMs: 10 * 60_000, limit: 30 },
 };
 
 const clip = (value, max) => String(value ?? "").slice(0, max);

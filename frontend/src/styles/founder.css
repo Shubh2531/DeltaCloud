@@ -1,0 +1,26 @@
+.founder h3 { font-size: 15px; margin: 0 0 8px; color: var(--muted); font-weight: 600; }
+
+.fd-yc { display: grid; gap: 8px; border-color: rgba(0, 229, 180, 0.3); }
+.fd-yc b { color: var(--accent); }
+.fd-yc p { margin: 0; font-size: 16px; line-height: 1.6; }
+.fd-yc .btn { justify-self: start; }
+
+.fd-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.fd-tile { display: grid; gap: 4px; padding: 14px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line); }
+.fd-tile span { color: var(--muted); font-size: 13px; }
+.fd-tile b { font-size: 28px; line-height: 1.1; }
+.fd-tile small { color: var(--faint); font-size: 12px; }
+
+.fd-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.fd-plot { position: relative; height: 220px; }
+
+.fd-cohorts td, .fd-cohorts th { white-space: nowrap; }
+
+.fd-builder { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.fd-builder .input { flex: 1 1 220px; }
+.fd-builder code {
+  flex: 2 1 260px; min-width: 0; padding: 10px 12px; border-radius: 10px; background: var(--panel-2);
+  border: 1px solid var(--line); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px;
+}
+
+.founder { display: grid; gap: 16px; }

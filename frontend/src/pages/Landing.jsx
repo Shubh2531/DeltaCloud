@@ -1,4 +1,5 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import api from "../lib/api";
 import { Link } from "react-router-dom";
 import WaveField from "../components/WaveField";
 import "../styles/landing.css";
@@ -152,7 +153,24 @@ function Scene() {
   );
 }
 
+// Real number of confirmed accounts, shown once it's big enough to mean something.
+function useUserCount() {
+  const [count, setCount] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    api
+      .get("/growth/public")
+      .then((res) => alive && setCount(res.data.users))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return count;
+}
+
 export default function Landing() {
+  const users = useUserCount();
   return (
     <div className="lp">
       <header className="lp-nav">
@@ -174,13 +192,16 @@ export default function Landing() {
           <div className="lp-hero-copy">
             <h1>Learn how markets move before you risk a dollar.</h1>
             <p className="lp-lede">
-              DeltaCloud gives you a $10,000 practice account, real market prices, a filtered news feed and plain-language readings of what just happened.
+              DeltaCloud gives you a $10,000 practice account, real prices for every coin and US stock, and DC Intelligence: it explains why markets moved, in plain words and in your language.
             </p>
             <div className="lp-cta">
               <Link to="/register" className="lp-btn">Create a free account</Link>
               <Link to="/login" className="lp-btn lp-btn-ghost">Sign in</Link>
             </div>
-            <p className="lp-fine">Free to start. Works on every device.</p>
+            <p className="lp-fine">
+              {Number.isFinite(users) && users >= 50 ? `${users.toLocaleString()} people learning with DeltaCloud. ` : ""}
+              Free to start. Works on every device.
+            </p>
           </div>
           <Scene />
         </section>

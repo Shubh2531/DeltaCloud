@@ -17,6 +17,27 @@ export function MarketProvider({ children }) {
   // The last ~60 prices seen per market (this session only), for sparklines.
   const [trail, setTrail] = useState({});
   const retries = useRef(0);
+  // Prices for markets outside the live stream (any coin or stock a screen is showing).
+  const [extra, setExtra] = useState({});
+  const watched = useRef(new Map()); // id -> number of screens watching it
+  const [watchVersion, setWatchVersion] = useState(0);
+
+  // Screens call watch([...ids]) and the returned function to stop. Prices for those ids are
+  // fetched every few seconds while anyone is watching them.
+  const watch = useCallback((ids) => {
+    const list = [...new Set((ids || []).filter(Boolean).map((id) => String(id).toUpperCase()))];
+    if (!list.length) return () => {};
+    for (const id of list) watched.current.set(id, (watched.current.get(id) || 0) + 1);
+    setWatchVersion((v) => v + 1);
+    return () => {
+      for (const id of list) {
+        const n = (watched.current.get(id) || 1) - 1;
+        if (n <= 0) watched.current.delete(id);
+        else watched.current.set(id, n);
+      }
+      setWatchVersion((v) => v + 1);
+    };
+  }, []);
 
   const apply = useCallback((snapshot) => {
     if (!snapshot?.prices) return;
@@ -106,11 +127,59 @@ export function MarketProvider({ children }) {
     };
   }, [user, apply]);
 
+  const streamed = useRef(prices);
+  streamed.current = prices;
+  useEffect(() => {
+    if (!user) {
+      setExtra({});
+      return undefined;
+    }
+    let alive = true;
+    const load = () => {
+      // Only ask for what the live stream doesn't already deliver, 50 at a time at most.
+      const ids = [...watched.current.keys()].filter((id) => !streamed.current[id]).slice(0, 50);
+      if (!ids.length) return;
+      api
+        .get("/market/prices", { params: { symbols: ids.join(",") } })
+        .then((res) => {
+          if (!alive) return;
+          const got = res.data?.prices || {};
+          setExtra((prev) => ({ ...prev, ...got }));
+          setTrail((prev) => {
+            const next = { ...prev };
+            for (const [id, q] of Object.entries(got)) {
+              if (!Number.isFinite(q?.c)) continue;
+              const arr = prev[id] ? prev[id].slice(-59) : [];
+              if (arr[arr.length - 1] !== q.c) arr.push(q.c);
+              next[id] = arr;
+            }
+            return next;
+          });
+        })
+        .catch(() => {});
+    };
+    load();
+    const timer = setInterval(load, 4000);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, [user, watchVersion]);
+
+  const allPrices = useMemo(() => ({ ...extra, ...prices }), [extra, prices]);
+
   const value = useMemo(
-    () => ({ prices, trail, mode, connected, updatedAt }),
-    [prices, trail, mode, connected, updatedAt]
+    () => ({ prices: allPrices, trail, mode, connected, updatedAt, watch }),
+    [allPrices, trail, mode, connected, updatedAt, watch]
   );
   return <MarketContext.Provider value={value}>{children}</MarketContext.Provider>;
+}
+
+// Keeps prices flowing for these markets while the calling screen is shown.
+export function useWatch(ids) {
+  const { watch } = useMarket();
+  const key = (ids || []).filter(Boolean).join(",");
+  useEffect(() => watch(key ? key.split(",") : []), [watch, key]);
 }
 
 export function useMarket() {

@@ -1,6 +1,9 @@
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { MARKETS, marketById } from "../lib/symbols";
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { marketById } from "../lib/symbols";
+import { useWatch } from "../context/MarketContext";
+import { useMarketInfo } from "../hooks/useMarketInfo";
+import MarketPicker from "../components/MarketPicker";
 import { usePaperAccount } from "../hooks/usePaperAccount";
 import FeedBadge from "../components/FeedBadge";
 import TradingViewChart from "../components/TradingViewChart";
@@ -12,9 +15,16 @@ import { priceFmt, qtyFmt, usd, signedUsd, timeFmt, tone } from "../lib/format";
 
 export default function Trading() {
   const [params, setParams] = useSearchParams();
-  const market = marketById(params.get("symbol"));
+  const market = useMarketInfo(params.get("symbol") || "BTCUSDT");
+  const isStock = market.kind === "stock";
   const { account, setAccount, error } = usePaperAccount();
   const [mode, setMode] = useState("spot"); // "spot" | "leverage"
+  useWatch([market.id]);
+
+  // Leverage practice is for crypto only.
+  useEffect(() => {
+    if (isStock) setMode("spot");
+  }, [isStock]);
 
   const orders = account?.orders.slice(0, 10) ?? [];
 
@@ -23,27 +33,29 @@ export default function Trading() {
       <div className="page-head">
         <div>
           <h1>Trading</h1>
-          <p>Practice buying and selling with play money. Prices are real when the badge says live.</p>
+          <p>Practice buying and selling any coin or US stock with play money. Prices are real when the badge says live.</p>
         </div>
         <FeedBadge />
       </div>
 
-      <div className="seg" role="group" aria-label="Market">
-        {MARKETS.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            className="btn"
-            aria-pressed={m.id === market.id}
-            onClick={() => setParams({ symbol: m.id }, { replace: true })}
-          >
-            {m.base}
-          </button>
-        ))}
+      <div className="card">
+        <MarketPicker value={market.id} onChange={(id) => setParams({ symbol: id }, { replace: true })} />
+        <p className="small muted" style={{ marginBottom: 0 }}>
+          Want to understand {market.name} first?{" "}
+          <Link to={`/intelligence?symbol=${encodeURIComponent(market.id)}`}>Ask DC Intelligence</Link>
+        </p>
       </div>
+
+      {isStock && (
+        <div className="notice" role="note">
+          Stock practice orders fill at the live price while the US market is open (weekdays 9:30 am to 4 pm Eastern).
+          Leverage practice is for crypto only.
+        </div>
+      )}
 
       {error && <div className="notice error" role="alert">{error}</div>}
 
+      {!isStock && (
       <div className="seg" role="group" aria-label="Order type">
         <button type="button" className={`btn${mode === "spot" ? " on" : ""}`} aria-pressed={mode === "spot"} onClick={() => setMode("spot")}>
           Spot
@@ -52,6 +64,7 @@ export default function Trading() {
           Leverage
         </button>
       </div>
+      )}
 
       <div className="cols-2">
         <TradingViewChart symbol={market.tv} height="clamp(320px, 62vh, 640px)" />

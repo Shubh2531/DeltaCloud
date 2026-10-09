@@ -15,6 +15,10 @@ import marketRoutes from "./routes/market.routes.js";
 import newsRoutes from "./routes/news.routes.js";
 import { startNews, stopNews } from "./services/news.js";
 import paperRoutes from "./routes/paper.routes.js";
+import intelRoutes from "./routes/intel.routes.js";
+import growthRoutes from "./routes/growth.routes.js";
+import { startStocks, stopStocks } from "./services/stocks.js";
+import { liveSnapshot } from "./services/prices.js";
 import { LIMITS, apiKey, authKey, ipOf } from "./lib/limits.js";
 
 const app = express();
@@ -23,7 +27,8 @@ const server = http.createServer(app);
 app.set("trust proxy", 1); // correct client IPs behind a host's load balancer
 app.use(helmet());
 
-const originAllowed = (origin) => !origin || config.clientOrigins.includes(origin);
+const originAllowed = (origin) =>
+  !origin || config.clientOrigins.includes(origin) || config.clientOriginPatterns.some((re) => re.test(origin));
 app.use(
   cors({
     origin(origin, callback) {
@@ -61,6 +66,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/market", marketRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/paper", paperRoutes);
+app.use("/api/intel", intelRoutes);
+app.use("/api/growth", growthRoutes);
 
 app.use("/api", (req, res) => res.status(404).json({ ok: false, message: "Not found." }));
 
@@ -94,10 +101,11 @@ io.use((socket, next) => {
 });
 
 io.on("connection", (socket) => {
-  socket.emit("priceUpdate", feed.snapshot());
+  socket.emit("priceUpdate", liveSnapshot());
 });
 
-feed.on("tick", (snapshot) => io.emit("priceUpdate", snapshot));
+// Featured coins, plus featured stocks from cache (no extra stock-data calls).
+feed.on("tick", () => io.emit("priceUpdate", liveSnapshot()));
 
 /* ---------------- Start ---------------- */
 async function start() {
@@ -107,6 +115,7 @@ async function start() {
     // Check email in the background so a slow mail host can never delay the server starting.
     verifyMail().catch(() => {});
     feed.start();
+    startStocks();
     startNews();
     server.listen(config.port, () => {
       console.log(`🚀 DeltaCloud API on port ${config.port} (${config.isProd ? "production" : "development"})`);
@@ -119,6 +128,7 @@ async function start() {
 
 function shutdown() {
   feed.stop();
+  stopStocks();
   stopNews();
   io.close();
   server.close(() => mongoose.connection.close().finally(() => process.exit(0)));
