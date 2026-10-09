@@ -15,6 +15,7 @@ import marketRoutes from "./routes/market.routes.js";
 import newsRoutes from "./routes/news.routes.js";
 import { startNews, stopNews } from "./services/news.js";
 import paperRoutes from "./routes/paper.routes.js";
+import { LIMITS, apiKey, authKey, ipOf } from "./lib/limits.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -34,12 +35,16 @@ app.use(
 app.use(express.json({ limit: "20kb" }));
 
 /* ---------------- Rate limits ---------------- */
+// Counted per person, not per network, so a campus sharing one Wi-Fi address can sign up
+// together. Per-IP ceilings stay on top to stop floods. See lib/limits.js.
 const tooMany = { ok: false, message: "Too many requests. Please wait a bit and try again." };
-const apiLimiter = rateLimit({ windowMs: 60_000, limit: 300, standardHeaders: true, legacyHeaders: false, message: tooMany });
-const codeLimiter = rateLimit({ windowMs: 15 * 60_000, limit: 20, standardHeaders: true, legacyHeaders: false, message: tooMany });
-app.use("/api", apiLimiter);
+const limiter = ({ windowMs, limit }, keyGenerator) =>
+  rateLimit({ windowMs, limit, keyGenerator, standardHeaders: true, legacyHeaders: false, message: tooMany });
+app.use("/api", limiter(LIMITS.apiPerIp, ipOf), limiter(LIMITS.apiPerClient, apiKey));
+const authPerIp = limiter(LIMITS.authPerIp, ipOf);
+const authPerPerson = limiter(LIMITS.authPerPerson, authKey);
 for (const path of ["login", "register", "verify-otp", "resend-otp", "forgot-password", "reset-password"]) {
-  app.use(`/api/auth/${path}`, codeLimiter);
+  app.use(`/api/auth/${path}`, authPerIp, authPerPerson);
 }
 
 /* ---------------- Routes ---------------- */
