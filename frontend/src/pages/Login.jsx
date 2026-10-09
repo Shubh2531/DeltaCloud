@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import api, { errorMessage } from "../lib/api";
 import AuthShell from "../components/AuthShell";
 import { useAuth } from "../context/AuthContext";
-import { passkeysAvailable, passkeyLabel, getPasskey, cancelled } from "../lib/passkey";
+import { passkeysAvailable, platformAuthAvailable, passkeyLabel, getPasskey, cancelled, devicePasskey, forgetDevicePasskey } from "../lib/passkey";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -17,21 +17,44 @@ export default function Login() {
   const notice = location.state?.notice;
   const { login } = useAuth();
   const [faceLoading, setFaceLoading] = useState(false);
+  // Everyone sees the option. It only works on a device with a face or fingerprint sensor
+  // where Face ID was turned on for DeltaCloud; otherwise it explains why, never a QR code.
   const canPasskey = passkeysAvailable();
+  const [saved, setSaved] = useState(devicePasskey);
+  const [sensor, setSensor] = useState(null); // null = still checking
+  useEffect(() => {
+    let alive = true;
+    platformAuthAvailable().then((ok) => alive && setSensor(ok));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // One tap: Face ID / fingerprint, no password and no emailed code.
   const signInWithPasskey = async () => {
     if (faceLoading) return;
-    setFaceLoading(true);
     setError("");
+    if (sensor === false) {
+      setError(`This device isn't compatible with ${passkeyLabel()} sign-in: it has no face or fingerprint sensor we can use. Sign in with your email below.`);
+      return;
+    }
+    if (!saved) {
+      setError(`${passkeyLabel()} isn't turned on for this device yet. Sign in with your email once, then tap "Turn on ${passkeyLabel()}" on your dashboard.`);
+      return;
+    }
+    setFaceLoading(true);
     try {
-      const { data: start } = await api.post("/auth/passkey/login/options");
+      const { data: start } = await api.post("/auth/passkey/login/options", { credentialId: saved?.id });
       const response = await getPasskey(start.options);
       const { data } = await api.post("/auth/passkey/login/verify", { response, challengeToken: start.challengeToken });
       login(data);
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      if (!cancelled(err)) setError(err?.response ? errorMessage(err) : "Face ID sign-in didn't work on this device. Use your email instead.");
+      if (err?.response?.status === 401) {
+        forgetDevicePasskey(); // that passkey was removed from the account
+        setSaved(null);
+      }
+      if (!cancelled(err)) setError(err?.response ? errorMessage(err) : `${passkeyLabel()} sign-in didn't work on this device. Use your email instead.`);
       setFaceLoading(false);
     }
   };
@@ -74,6 +97,7 @@ export default function Login() {
           <button type="button" className="btn btn-primary btn-block passkey-btn" onClick={signInWithPasskey} disabled={faceLoading}>
             {faceLoading ? "Waiting for you…" : `Sign in with ${passkeyLabel()}`}
           </button>
+          {saved?.email && <p className="small muted" style={{ textAlign: "center", margin: "6px 0 0" }}>as {saved.email}</p>}
           <div className="or-line">
             <span>or use your email</span>
           </div>

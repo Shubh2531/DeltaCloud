@@ -276,8 +276,8 @@ router.post("/passkey/register/verify", requireAuth, async (req, res, next) => {
   try {
     const user = await User.findById(req.userId).select("+passkeys");
     if (!user) return fail(res, 401, "Your session has expired. Sign in again.");
-    await finishRegistration(user, req.body || {}, req.get("user-agent"));
-    return res.json({ ok: true, message: "Face ID is on. Next time, sign in with one tap.", passkeys: listPasskeys(user) });
+    const credentialId = await finishRegistration(user, req.body || {}, req.get("user-agent"));
+    return res.json({ ok: true, message: "Face ID is on. Next time, sign in with one tap.", passkeys: listPasskeys(user), credentialId });
   } catch (err) {
     return passkeyFail(res, err, next);
   }
@@ -308,7 +308,7 @@ router.delete("/passkeys/:id", requireAuth, async (req, res, next) => {
 // Signed out: sign in with a passkey. No email or password needed.
 router.post("/passkey/login/options", async (req, res, next) => {
   try {
-    return res.json({ ok: true, ...(await authenticationOptions()) });
+    return res.json({ ok: true, ...(await authenticationOptions(req.body?.credentialId)) });
   } catch (err) {
     return passkeyFail(res, err, next);
   }

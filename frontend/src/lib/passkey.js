@@ -18,11 +18,47 @@ export function passkeysAvailable() {
   return host === "joindeltacloud.com" || host.endsWith(".joindeltacloud.com") || host === "localhost";
 }
 
+// True only when this device has a built-in face or fingerprint sensor ready to use.
+export async function platformAuthAvailable() {
+  if (!passkeysAvailable()) return false;
+  try {
+    return Boolean(await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable?.());
+  } catch {
+    return false;
+  }
+}
+
+// Which passkey this device saved, so sign-in can go straight to Face ID / fingerprint.
+const DEVICE_KEY = "dc_device_passkey";
+export function devicePasskey() {
+  try {
+    const v = JSON.parse(localStorage.getItem(DEVICE_KEY) || "null");
+    return v?.id ? v : null;
+  } catch {
+    return null;
+  }
+}
+export function rememberDevicePasskey(id, email) {
+  try {
+    if (id) localStorage.setItem(DEVICE_KEY, JSON.stringify({ id, email: email || "" }));
+  } catch {
+    /* without storage, sign-in just shows the email form */
+  }
+}
+export function forgetDevicePasskey() {
+  try {
+    localStorage.removeItem(DEVICE_KEY);
+  } catch {
+    /* fine */
+  }
+}
+
 // What to call it on this device.
 export function passkeyLabel() {
   const ua = navigator.userAgent || "";
-  if (/iPhone|iPad|Macintosh/i.test(ua)) return "Face ID or Touch ID";
-  if (/Android/i.test(ua)) return "fingerprint or face unlock";
+  if (/iPhone|iPad/i.test(ua)) return "Face ID";
+  if (/Macintosh/i.test(ua)) return "Touch ID";
+  if (/Android/i.test(ua)) return "fingerprint";
   if (/Windows/i.test(ua)) return "Windows Hello";
   return "passkey";
 }
@@ -31,6 +67,8 @@ export async function createPasskey(options) {
   const cred = await navigator.credentials.create({
     publicKey: {
       ...options,
+      hints: ["client-device"], // this device's own sensor, not another phone
+      authenticatorSelection: { ...(options.authenticatorSelection || {}), authenticatorAttachment: "platform" },
       challenge: toBytes(options.challenge),
       user: { ...options.user, id: toBytes(options.user.id) },
       excludeCredentials: (options.excludeCredentials || []).map((c) => ({ ...c, id: toBytes(c.id) })),
@@ -55,6 +93,7 @@ export async function getPasskey(options) {
   const cred = await navigator.credentials.get({
     publicKey: {
       ...options,
+      hints: ["client-device"],
       challenge: toBytes(options.challenge),
       allowCredentials: (options.allowCredentials || []).map((c) => ({ ...c, id: toBytes(c.id) })),
     },

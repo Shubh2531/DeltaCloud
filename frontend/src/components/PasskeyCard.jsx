@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import api, { errorMessage } from "../lib/api";
-import { passkeysAvailable, passkeyLabel, createPasskey, cancelled } from "../lib/passkey";
+import { useAuth } from "../context/AuthContext";
+import {
+  passkeysAvailable,
+  platformAuthAvailable,
+  passkeyLabel,
+  createPasskey,
+  cancelled,
+  devicePasskey,
+  rememberDevicePasskey,
+  forgetDevicePasskey,
+} from "../lib/passkey";
 
 const DISMISS_KEY = "dc_passkey_nudge_off";
 
@@ -25,8 +35,19 @@ export default function PasskeyCard({ compact = false }) {
       return false;
     }
   });
-  const available = passkeysAvailable();
+  const { user } = useAuth();
+  const [available, setAvailable] = useState(null); // null = still checking
+  const [onThisDevice, setOnThisDevice] = useState(() => Boolean(devicePasskey()));
   const label = passkeyLabel();
+
+  // Only devices with a built-in face or fingerprint sensor get the option.
+  useEffect(() => {
+    let alive = true;
+    platformAuthAvailable().then((ok) => alive && setAvailable(ok));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const load = useCallback(() => {
     api
@@ -36,11 +57,14 @@ export default function PasskeyCard({ compact = false }) {
   }, []);
 
   useEffect(() => {
-    if (available && !hidden) load();
-  }, [available, hidden, load]);
+    if (passkeysAvailable() && !hidden) load();
+  }, [hidden, load]);
 
-  if (!available || hidden || list === null) return null;
-  if (compact && list.length > 0) return null;
+  if (!passkeysAvailable() || hidden || list === null || available === null) return null;
+  // The dashboard offer only goes to devices that can use it.
+  if (compact && !available) return null;
+  // The dashboard offer is about this device: hide it once this device is set up.
+  if (compact && onThisDevice) return null;
 
   const add = async () => {
     setBusy(true);
@@ -49,9 +73,15 @@ export default function PasskeyCard({ compact = false }) {
     try {
       const data = await turnOnPasskey();
       setList(data.passkeys);
+      rememberDevicePasskey(data.credentialId, user?.email);
+      setOnThisDevice(true);
       setMsg(data.message);
     } catch (err) {
-      if (!cancelled(err)) setError(err?.response ? errorMessage(err) : "This device couldn't save a passkey.");
+      if (err?.name === "InvalidStateError") {
+        setError(`${label} is already set up for DeltaCloud on this device.`);
+      } else if (!cancelled(err)) {
+        setError(err?.response ? errorMessage(err) : `This device couldn't turn on ${label}.`);
+      }
     } finally {
       setBusy(false);
     }
@@ -62,6 +92,10 @@ export default function PasskeyCard({ compact = false }) {
     try {
       const { data } = await api.delete(`/auth/passkeys/${encodeURIComponent(id)}`);
       setList(data.passkeys);
+      if (devicePasskey()?.id === id) {
+        forgetDevicePasskey();
+        setOnThisDevice(false);
+      }
     } catch (err) {
       setError(errorMessage(err));
     }
@@ -109,6 +143,7 @@ export default function PasskeyCard({ compact = false }) {
             <li key={p.id}>
               <span>
                 <b>{p.name || "Device"}</b>
+                {devicePasskey()?.id === p.id && <span className="small pos"> (this device)</span>}
                 <span className="small muted">
                   {" "}
                   added {new Date(p.createdAt).toLocaleDateString()}
@@ -122,8 +157,14 @@ export default function PasskeyCard({ compact = false }) {
           ))}
         </ul>
       )}
-      <button type="button" className="btn btn-primary" onClick={add} disabled={busy}>
-        {busy ? "Waiting for you…" : list.length ? `Add ${label} on this device` : `Turn on ${label}`}
+      {!available && (
+        <p className="notice" style={{ margin: 0 }}>
+          This device isn't compatible: it has no face or fingerprint sensor we can use. Open DeltaCloud on your phone or a laptop with Touch
+          ID or Windows Hello to turn it on there.
+        </p>
+      )}
+      <button type="button" className="btn btn-primary" onClick={add} disabled={busy || onThisDevice || !available}>
+        {busy ? "Waiting for you…" : onThisDevice ? `${label} is on for this device` : `Turn on ${label} for this device`}
       </button>
       {msg && <p className="small pos" style={{ margin: 0 }}>{msg}</p>}
       {error && <p className="small neg" style={{ margin: 0 }}>{error}</p>}
