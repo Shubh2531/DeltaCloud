@@ -36,7 +36,7 @@ export const config = {
   clientOrigins: [
     process.env.CLIENT_ORIGINS ||
       "http://localhost:3000,http://localhost:3001,capacitor://localhost,http://localhost,https://localhost",
-    "https://joindeltacloud.com,https://www.joindeltacloud.com",
+    "https://joindeltacloud.com,https://www.joindeltacloud.com,https://deltacloud-55h.pages.dev",
   ]
     .join(",")
     .split(",")
