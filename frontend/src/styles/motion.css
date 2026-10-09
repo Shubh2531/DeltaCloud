@@ -1,52 +1,14 @@
 /* ============================================================================
-   GLOBAL MOTION LAYER — pure CSS, bulletproof
-   Every direct child of every .page animates in with a slow rise-up on mount.
-   Grid cells inside pages get their own nested stagger. The engine (motion.js)
-   handles only the 3D tilt and sheen effects.
+   GLOBAL MOTION LAYER
+   Every matched element starts invisible and shifted down — a CSS *default*
+   state, painted before any JS runs. motion.js watches the page with an
+   IntersectionObserver and adds ".dc-in" the moment each element scrolls into
+   view, which is what plays the rise-up below. So: nothing is visible until
+   you scroll to it, then it rises into place — not an all-at-once page load.
+   The engine also handles 3D tilt on cards; that part is unrelated to this.
    ============================================================================ */
 
-/* ---------- Slow rise-up on every page mount ---------- */
-@keyframes dc-rise {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 100px, 0) scale(0.94);
-    filter: blur(16px);
-  }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-    filter: blur(0);
-  }
-}
-
-/* The whole page itself fades in slightly, so the aurora behind it is visible first. */
-.page {
-  animation: dc-page-wake 0.6s ease-out both;
-}
-@keyframes dc-page-wake {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* Every direct child of .page rises in, one after another, with a long slow motion. */
-.page > * {
-  animation: dc-rise 1.8s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: var(--dc-delay, 0ms);
-  will-change: opacity, transform, filter;
-}
-.page > *:nth-child(1)  { --dc-delay: 100ms; }
-.page > *:nth-child(2)  { --dc-delay: 300ms; }
-.page > *:nth-child(3)  { --dc-delay: 500ms; }
-.page > *:nth-child(4)  { --dc-delay: 700ms; }
-.page > *:nth-child(5)  { --dc-delay: 900ms; }
-.page > *:nth-child(6)  { --dc-delay: 1100ms; }
-.page > *:nth-child(7)  { --dc-delay: 1300ms; }
-.page > *:nth-child(8)  { --dc-delay: 1500ms; }
-.page > *:nth-child(9)  { --dc-delay: 1700ms; }
-.page > *:nth-child(n+10) { --dc-delay: 1900ms; }
-
-/* Grid wrappers inside a page: the wrapper itself still rises (as a .page direct child),
-   but each CELL inside also ripples in with its own stagger on top. */
+.page > *,
 .page .cols-even > *,
 .page .fd-charts > *,
 .page .fd-tiles > *,
@@ -54,81 +16,116 @@
 .page .intel-top > *,
 .page .settings-cards > *,
 .page .cols-2 > *,
-.page .cols-even > .card,
-.page .fd-tiles > .fd-tile {
-  animation: dc-rise 1.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: var(--dc-delay, 0ms);
+.page .story,
+.page .journal-table tr,
+.page .stories > *,
+.page .table tbody tr,
+.lp > main > * {
+  opacity: 0;
+  transform: translate3d(0, 64px, 0) scale(0.96);
+  filter: blur(9px);
+  transition:
+    opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--dc-delay, 0ms);
+  will-change: opacity, transform, filter;
 }
+.page > *.dc-in,
+.page .cols-even > *.dc-in,
+.page .fd-charts > *.dc-in,
+.page .fd-tiles > *.dc-in,
+.page .intel-grid > *.dc-in,
+.page .intel-top > *.dc-in,
+.page .settings-cards > *.dc-in,
+.page .cols-2 > *.dc-in,
+.page .story.dc-in,
+.page .journal-table tr.dc-in,
+.page .stories > *.dc-in,
+.page .table tbody tr.dc-in,
+.lp > main > *.dc-in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  filter: blur(0);
+}
+
+/* The page wrapper itself fades in quickly so the aurora behind it is visible first. */
+.page {
+  animation: dc-page-wake 0.5s ease-out both;
+}
+@keyframes dc-page-wake {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Stagger: elements that cross into view together (a row of cards, a page's first
+   few sections) rise in one after another rather than all at once. Kept short so
+   nothing waits long once it's actually on screen. */
+.page > *:nth-child(1)  { --dc-delay: 0ms; }
+.page > *:nth-child(2)  { --dc-delay: 90ms; }
+.page > *:nth-child(3)  { --dc-delay: 180ms; }
+.page > *:nth-child(4)  { --dc-delay: 270ms; }
+.page > *:nth-child(5)  { --dc-delay: 360ms; }
+.page > *:nth-child(n+6) { --dc-delay: 420ms; }
+
 .page .cols-even > *:nth-child(1),
 .page .fd-tiles  > *:nth-child(1),
 .page .fd-charts > *:nth-child(1),
 .page .intel-grid > *:nth-child(1),
 .page .intel-top > *:nth-child(1),
 .page .settings-cards > *:nth-child(1),
-.page .cols-2 > *:nth-child(1) { --dc-delay: 150ms; }
+.page .cols-2 > *:nth-child(1) { --dc-delay: 60ms; }
 .page .cols-even > *:nth-child(2),
 .page .fd-tiles  > *:nth-child(2),
 .page .fd-charts > *:nth-child(2),
 .page .intel-grid > *:nth-child(2),
 .page .intel-top > *:nth-child(2),
 .page .settings-cards > *:nth-child(2),
-.page .cols-2 > *:nth-child(2) { --dc-delay: 300ms; }
+.page .cols-2 > *:nth-child(2) { --dc-delay: 140ms; }
 .page .cols-even > *:nth-child(3),
 .page .fd-tiles  > *:nth-child(3),
 .page .fd-charts > *:nth-child(3),
 .page .intel-grid > *:nth-child(3),
 .page .intel-top > *:nth-child(3),
 .page .settings-cards > *:nth-child(3),
-.page .cols-2 > *:nth-child(3) { --dc-delay: 450ms; }
+.page .cols-2 > *:nth-child(3) { --dc-delay: 220ms; }
 .page .cols-even > *:nth-child(4),
 .page .fd-tiles  > *:nth-child(4),
 .page .fd-charts > *:nth-child(4),
 .page .intel-grid > *:nth-child(4),
 .page .intel-top > *:nth-child(4),
 .page .settings-cards > *:nth-child(4),
-.page .cols-2 > *:nth-child(4) { --dc-delay: 600ms; }
+.page .cols-2 > *:nth-child(4) { --dc-delay: 300ms; }
 .page .cols-even > *:nth-child(5),
 .page .fd-tiles  > *:nth-child(5),
 .page .fd-charts > *:nth-child(5),
 .page .intel-grid > *:nth-child(5),
 .page .intel-top > *:nth-child(5),
 .page .settings-cards > *:nth-child(5),
-.page .cols-2 > *:nth-child(5) { --dc-delay: 750ms; }
+.page .cols-2 > *:nth-child(5) { --dc-delay: 380ms; }
 .page .cols-even > *:nth-child(n+6),
 .page .fd-tiles  > *:nth-child(n+6),
 .page .fd-charts > *:nth-child(n+6),
 .page .intel-grid > *:nth-child(n+6),
 .page .intel-top > *:nth-child(n+6),
 .page .settings-cards > *:nth-child(n+6),
-.page .cols-2 > *:nth-child(n+6) { --dc-delay: 900ms; }
+.page .cols-2 > *:nth-child(n+6) { --dc-delay: 440ms; }
 
-/* News stories, journal rows, orders — each row stagger-fades on its own */
-.page .story,
-.page .journal-table tr,
-.page .stories > *,
-.page .table tbody tr {
-  animation: dc-rise 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: var(--dc-delay, 0ms);
-}
-.page .stories > *:nth-child(1), .page .table tbody tr:nth-child(1) { --dc-delay: 200ms; }
-.page .stories > *:nth-child(2), .page .table tbody tr:nth-child(2) { --dc-delay: 300ms; }
-.page .stories > *:nth-child(3), .page .table tbody tr:nth-child(3) { --dc-delay: 400ms; }
-.page .stories > *:nth-child(4), .page .table tbody tr:nth-child(4) { --dc-delay: 500ms; }
-.page .stories > *:nth-child(5), .page .table tbody tr:nth-child(5) { --dc-delay: 600ms; }
-.page .stories > *:nth-child(n+6), .page .table tbody tr:nth-child(n+6) { --dc-delay: 700ms; }
+/* News stories, journal rows, orders — each row stagger-rises on its own */
+.page .stories > *:nth-child(1), .page .table tbody tr:nth-child(1) { --dc-delay: 0ms; }
+.page .stories > *:nth-child(2), .page .table tbody tr:nth-child(2) { --dc-delay: 70ms; }
+.page .stories > *:nth-child(3), .page .table tbody tr:nth-child(3) { --dc-delay: 140ms; }
+.page .stories > *:nth-child(4), .page .table tbody tr:nth-child(4) { --dc-delay: 210ms; }
+.page .stories > *:nth-child(5), .page .table tbody tr:nth-child(5) { --dc-delay: 280ms; }
+.page .stories > *:nth-child(n+6), .page .table tbody tr:nth-child(n+6) { --dc-delay: 340ms; }
 
-/* Also animate landing-page sections exactly the same way */
-.lp > main > * {
-  animation: dc-rise 1.8s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: var(--dc-delay, 0ms);
-  will-change: opacity, transform, filter;
-}
-.lp > main > *:nth-child(1) { --dc-delay: 100ms; }
-.lp > main > *:nth-child(2) { --dc-delay: 300ms; }
-.lp > main > *:nth-child(3) { --dc-delay: 500ms; }
-.lp > main > *:nth-child(4) { --dc-delay: 700ms; }
-.lp > main > *:nth-child(5) { --dc-delay: 900ms; }
-.lp > main > *:nth-child(n+6) { --dc-delay: 1100ms; }
+/* Landing page sections, same treatment */
+.lp > main > *:nth-child(1) { --dc-delay: 0ms; }
+.lp > main > *:nth-child(2) { --dc-delay: 100ms; }
+.lp > main > *:nth-child(3) { --dc-delay: 200ms; }
+.lp > main > *:nth-child(4) { --dc-delay: 300ms; }
+.lp > main > *:nth-child(5) { --dc-delay: 400ms; }
+.lp > main > *:nth-child(n+6) { --dc-delay: 500ms; }
 
 /* ---------- Heavy frosted glass on every card ---------- */
 .card {
@@ -286,14 +283,25 @@
 @media (prefers-reduced-motion: reduce) {
   .page, .page > *, .page .cols-even > *, .page .fd-tiles > *, .page .fd-charts > *,
   .page .intel-grid > *, .page .intel-top > *, .page .settings-cards > *,
-  .page .cols-2 > *, .page .story, .page .table tbody tr, .lp > main > *,
+  .page .cols-2 > *, .page .story, .page .journal-table tr, .page .stories > *,
+  .page .table tbody tr, .lp > main > *,
   .main::before, .lp::before, .dorb-stage::before, .btn-primary,
-  .nav-link.active::before { animation: none !important; opacity: 1 !important; transform: none !important; filter: none !important; }
+  .nav-link.active::before {
+    animation: none !important; transition: none !important;
+    opacity: 1 !important; transform: none !important; filter: none !important;
+  }
   .card { transition: none; }
 }
 .motion-reduce .page, .motion-reduce .page > *, .motion-reduce .page .cols-even > *,
 .motion-reduce .page .fd-tiles > *, .motion-reduce .page .fd-charts > *,
+.motion-reduce .page .intel-grid > *, .motion-reduce .page .intel-top > *,
+.motion-reduce .page .settings-cards > *, .motion-reduce .page .cols-2 > *,
+.motion-reduce .page .story, .motion-reduce .page .journal-table tr,
+.motion-reduce .page .stories > *, .motion-reduce .page .table tbody tr,
 .motion-reduce .lp > main > *, .motion-reduce .card,
 .motion-reduce .main::before, .motion-reduce .lp::before,
 .motion-reduce .dorb-stage::before, .motion-reduce .btn-primary,
-.motion-reduce .nav-link.active::before { animation: none !important; opacity: 1 !important; transform: none !important; filter: none !important; }
+.motion-reduce .nav-link.active::before {
+  animation: none !important; transition: none !important;
+  opacity: 1 !important; transform: none !important; filter: none !important;
+}
