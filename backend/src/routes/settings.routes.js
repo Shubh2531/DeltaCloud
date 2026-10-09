@@ -4,7 +4,9 @@ import User from "../models/User.js";
 import PaperAccount from "../models/PaperAccount.js";
 import TradeLog from "../models/TradeLog.js";
 import { requireAuth } from "../middleware/auth.js";
-import { validatePassword, cleanName, validateDob } from "../lib/validators.js";
+import { validatePassword, cleanName, validateDob, normalizeEmail, isOtp } from "../lib/validators.js";
+import { issueOtp, checkOtp } from "../services/otp.js";
+import { sendOtpEmail } from "../services/mail.js";
 import { config } from "../config.js";
 
 const router = Router();
@@ -47,6 +49,7 @@ router.get(
       profile: {
         name: user.name,
         email: user.email,
+        pendingEmail: user.pendingEmail || null,
         dob: user.dob,
         createdAt: user.createdAt,
       },
@@ -104,6 +107,55 @@ router.post(
     user.refreshHashes = [];
     await user.save();
     res.json({ ok: true, message: "Password changed. Other devices were signed out." });
+  })
+);
+
+// Change email, step 1: password check, then a code goes to the NEW address so we know
+// it's reachable and really theirs.
+router.post(
+  "/email/start",
+  ah(async (req, res) => {
+    const email = normalizeEmail(req.body?.newEmail);
+    if (!email) return fail(res, 400, "Enter a valid email address.");
+    const user = await User.findById(req.userId).select("+passwordHash");
+    if (!user) return fail(res, 401, "Your session has expired. Sign in again.");
+    const okPassword = await bcrypt.compare(String(req.body?.password || ""), user.passwordHash);
+    if (!okPassword) return fail(res, 400, "Your password is wrong.");
+    if (email === user.email) return fail(res, 400, "That's already your email.");
+    if (await User.exists({ email })) return fail(res, 409, "Another account already uses that email.");
+    user.pendingEmail = email;
+    let otp;
+    try {
+      otp = await issueOtp(user, "email");
+    } catch (err) {
+      if (err.status === 429) return fail(res, 429, `A code was sent a moment ago. Try again in ${err.retryAfter} seconds.`);
+      throw err;
+    }
+    await sendOtpEmail({ to: email, otp, purpose: "email" });
+    res.json({ ok: true, message: `We sent a 6-digit code to ${email}.`, profile: { name: user.name, email: user.email, pendingEmail: email, dob: user.dob } });
+  })
+);
+
+// Change email, step 2: the code from the new inbox confirms they really control it.
+router.post(
+  "/email/verify",
+  ah(async (req, res) => {
+    const otp = req.body?.otp;
+    if (!isOtp(otp)) return fail(res, 400, "Enter the 6-digit code.");
+    const user = await User.findById(req.userId).select("+otpHash");
+    if (!user) return fail(res, 401, "Your session has expired. Sign in again.");
+    if (!user.pendingEmail) return fail(res, 400, "Start the email change again.");
+    const result = await checkOtp(user, otp, "email");
+    if (!result.ok) return fail(res, 400, result.reason);
+    if (await User.exists({ email: user.pendingEmail, _id: { $ne: user._id } })) {
+      user.pendingEmail = undefined;
+      await user.save();
+      return fail(res, 409, "Another account started using that email. Try a different one.");
+    }
+    user.email = user.pendingEmail;
+    user.pendingEmail = undefined;
+    await user.save();
+    res.json({ ok: true, message: `Your email is now ${user.email}.`, profile: { name: user.name, email: user.email, pendingEmail: null, dob: user.dob } });
   })
 );
 

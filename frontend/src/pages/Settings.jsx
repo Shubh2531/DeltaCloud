@@ -72,7 +72,7 @@ const Row = ({ label, hint, children }) => (
 );
 
 /* ---------- Profile ---------- */
-function ProfileSection({ data, updateProfile, onToast }) {
+function ProfileSection({ data, updateProfile, onToast, onProfile }) {
   const [name, setName] = useState(data.profile.name || "");
   const [dob, setDob] = useState(data.profile.dob ? String(data.profile.dob).slice(0, 10) : "");
   const [busy, setBusy] = useState(false);
@@ -89,28 +89,110 @@ function ProfileSection({ data, updateProfile, onToast }) {
     }
   };
   return (
-    <form className="card" onSubmit={save}>
-      <h3>Who you are</h3>
-      <p className="muted small">Shown to you only. We never share it with other users.</p>
-      <Field label="Display name">
-        <input className="input" value={name} onChange={(e) => setName(e.target.value)} required maxLength={60} />
+    <>
+      <form className="card" onSubmit={save}>
+        <h3>Who you are</h3>
+        <p className="muted small">Shown to you only. We never share it with other users.</p>
+        <Field label="Display name">
+          <input className="input" value={name} onChange={(e) => setName(e.target.value)} required maxLength={60} />
+        </Field>
+        <Field label="Date of birth" hint="You must be 18 or older.">
+          <input type="date" className="input" value={dob} onChange={(e) => setDob(e.target.value)} max={new Date(Date.now() - 18 * 365.25 * 86400000).toISOString().slice(0, 10)} />
+        </Field>
+        <Field label="Joined">
+          <input className="input" value={new Date(data.profile.createdAt).toLocaleDateString()} disabled />
+        </Field>
+        <div className="settings-actions">
+          <button type="submit" className="btn btn-primary" disabled={busy}>
+            {busy ? "Saving…" : "Save profile"}
+          </button>
+        </div>
+      </form>
+      <EmailCard profile={data.profile} onProfile={onProfile} onToast={onToast} />
+    </>
+  );
+}
+
+/* ---------- Email ---------- */
+function EmailCard({ profile, onProfile, onToast }) {
+  const { updateUser } = useAuth();
+  const [step, setStep] = useState(profile.pendingEmail ? "code" : "idle"); // idle | form | code
+  const [newEmail, setNewEmail] = useState(profile.pendingEmail || "");
+  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const startEmail = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const { data } = await api.post("/settings/email/start", { newEmail, password });
+      onProfile(data.profile);
+      setPassword("");
+      setStep("code");
+      onToast(data.message, "ok");
+    } catch (err) {
+      onToast(errorMessage(err), "error");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const verifyEmail = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const { data } = await api.post("/settings/email/verify", { otp: code });
+      onProfile(data.profile);
+      updateUser({ email: data.profile.email });
+      setStep("idle");
+      setCode("");
+      onToast(data.message, "ok");
+    } catch (err) {
+      onToast(errorMessage(err), "error");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="card">
+      <h3>Email</h3>
+      <Field label="Current email">
+        <input className="input" value={profile.email} disabled />
       </Field>
-      <Field label="Date of birth" hint="You must be 18 or older.">
-        <input type="date" className="input" value={dob} onChange={(e) => setDob(e.target.value)} max={new Date(Date.now() - 18 * 365.25 * 86400000).toISOString().slice(0, 10)} />
-      </Field>
-      <Field label="Email">
-        <input className="input" value={data.profile.email} disabled />
-        <span className="settings-field-hint">Changing your email isn't supported yet. Email support if you need to.</span>
-      </Field>
-      <Field label="Joined">
-        <input className="input" value={new Date(data.profile.createdAt).toLocaleDateString()} disabled />
-      </Field>
-      <div className="settings-actions">
-        <button type="submit" className="btn btn-primary" disabled={busy}>
-          {busy ? "Saving…" : "Save profile"}
-        </button>
-      </div>
-    </form>
+      {step === "idle" && (
+        <div className="settings-actions">
+          <button type="button" className="btn" onClick={() => setStep("form")}>Change email</button>
+        </div>
+      )}
+      {step === "form" && (
+        <form onSubmit={startEmail} style={{ display: "grid", gap: 10 }}>
+          <Field label="New email address">
+            <input className="input" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required autoComplete="email" />
+          </Field>
+          <Field label="Your password" hint="So we know it's really you.">
+            <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
+          </Field>
+          <div className="settings-actions">
+            <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? "Sending…" : "Send code to new email"}</button>
+            <button type="button" className="btn" onClick={() => setStep("idle")}>Cancel</button>
+          </div>
+        </form>
+      )}
+      {step === "code" && (
+        <form onSubmit={verifyEmail} style={{ display: "grid", gap: 10 }}>
+          <p className="muted small">Enter the 6-digit code we sent to {profile.pendingEmail || newEmail}.</p>
+          <Field label="6-digit code">
+            <input className="input" inputMode="numeric" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} autoComplete="one-time-code" />
+          </Field>
+          <div className="settings-actions">
+            <button type="submit" className="btn btn-primary" disabled={busy || code.length !== 6}>{busy ? "Checking…" : "Confirm new email"}</button>
+            <button type="button" className="btn" onClick={() => setStep("form")}>Use a different email</button>
+          </div>
+        </form>
+      )}
+    </div>
   );
 }
 
@@ -381,9 +463,6 @@ function DataSection({ onToast }) {
             {busy ? "Preparing…" : "Download my data"}
           </button>
         </div>
-        <button type="button" className="btn btn-sm" onClick={logout}>
-          Sign out
-        </button>
       </div>
 
       <form className="card settings-danger" onSubmit={deleteAccount}>
@@ -470,7 +549,7 @@ function HelpSection() {
 /* ---------- Main ---------- */
 export default function Settings() {
   const { user, logout } = useAuth();
-  const { data, options, loading, error, reload, updatePrefs, updateProfile } = useSettings();
+  const { data, options, loading, error, reload, updatePrefs, updateProfile, setProfile } = useSettings();
   const [section, setSection] = useState("profile");
   const [toast, setToast] = useState({ msg: "", kind: "ok" });
   const showToast = (msg, kind) => setToast({ msg, kind });
@@ -495,7 +574,7 @@ export default function Settings() {
   }
 
   const content = {
-    profile: <ProfileSection data={data} updateProfile={updateProfile} onToast={showToast} />,
+    profile: <ProfileSection data={data} updateProfile={updateProfile} onToast={showToast} onProfile={setProfile} />,
     security: <SecuritySection onToast={showToast} />,
     notifications: <NotificationsSection data={data} updatePrefs={updatePrefs} onToast={showToast} />,
     display: <DisplaySection data={data} options={options} updatePrefs={updatePrefs} onToast={showToast} />,

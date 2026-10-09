@@ -42,5 +42,11 @@ export function useSettings() {
     return res;
   }, []);
 
-  return { data, options, loading, error, reload: load, updatePrefs, updateProfile };
+  // For flows that update the profile themselves (email change's two-step code),
+  // so the page doesn't need a full reload to show the new state.
+  const setProfile = useCallback((profile) => {
+    setData((d) => (d ? { ...d, profile } : d));
+  }, []);
+
+  return { data, options, loading, error, reload: load, updatePrefs, updateProfile, setProfile };
 }
