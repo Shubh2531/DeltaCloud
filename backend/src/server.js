@@ -16,6 +16,7 @@ import newsRoutes from "./routes/news.routes.js";
 import { startNews, stopNews } from "./services/news.js";
 import paperRoutes from "./routes/paper.routes.js";
 import intelRoutes from "./routes/intel.routes.js";
+import growthRoutes from "./routes/growth.routes.js";
 import { startStocks, stopStocks } from "./services/stocks.js";
 import { liveSnapshot } from "./services/prices.js";
 import { LIMITS, apiKey, authKey, ipOf } from "./lib/limits.js";
@@ -66,6 +67,7 @@ app.use("/api/market", marketRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/paper", paperRoutes);
 app.use("/api/intel", intelRoutes);
+app.use("/api/growth", growthRoutes);
 
 app.use("/api", (req, res) => res.status(404).json({ ok: false, message: "Not found." }));
 

@@ -22,11 +22,20 @@ const UserSchema = new mongoose.Schema(
 
     // SHA-256 hashes of currently valid refresh tokens (one per signed-in device).
     refreshHashes: { type: [String], select: false, default: [] },
+
+    // Growth: when the account was confirmed, this user's own invite code, how they found us
+    // (a tag like "finance-club" from a link), and who invited them.
+    verifiedAt: { type: Date },
+    refCode: { type: String },
+    source: { type: String },
+    referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );
 
 // Fast lookup for the same-person check at registration (name is matched case-insensitively).
 UserSchema.index({ name: 1, dob: 1 });
+UserSchema.index({ refCode: 1 }, { unique: true, partialFilterExpression: { refCode: { $type: "string" } } });
+UserSchema.index({ referredBy: 1 });
 
 export default mongoose.model("User", UserSchema);

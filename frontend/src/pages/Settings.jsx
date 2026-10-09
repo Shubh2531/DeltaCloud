@@ -3,6 +3,7 @@ import api, { errorMessage } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import FeedBadge from "../components/FeedBadge";
 import Disclaimer from "../components/Disclaimer";
+import InviteCard from "../components/InviteCard";
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -36,6 +37,7 @@ export default function Settings() {
       </div>
 
       <div className="cols-even">
+        <InviteCard />
         <div className="card" style={{ display: "grid", gap: 10 }}>
           <h2 style={{ marginBottom: 0 }}>Account</h2>
           <div>

@@ -4,6 +4,7 @@ import { requireAuth } from "../middleware/auth.js";
 import { explain, intelStatus, IntelError } from "../services/intel.js";
 import { LIMITS, apiKey } from "../lib/limits.js";
 import { LANGUAGES } from "../lib/intelPrompt.js";
+import { countEvent } from "../services/growth.js";
 
 const router = Router();
 router.use(requireAuth);
@@ -29,7 +30,9 @@ router.post("/explain", async (req, res, next) => {
   const question = typeof req.body?.question === "string" ? req.body.question : "";
   try {
     const lang = typeof req.body?.lang === "string" ? req.body.lang : "en";
-    res.json({ ok: true, ...(await explain(symbol, question, lang)) });
+    const result = await explain(symbol, question, lang);
+    countEvent("intel");
+    res.json({ ok: true, ...result });
   } catch (err) {
     if (err instanceof IntelError) return res.status(err.status).json({ ok: false, message: err.message });
     next(err);

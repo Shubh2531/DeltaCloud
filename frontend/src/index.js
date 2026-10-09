@@ -7,6 +7,10 @@ import { AuthProvider } from "./context/AuthContext";
 import { MarketProvider } from "./context/MarketContext";
 
 import "./styles/index.css";
+import { captureAttribution } from "./lib/attribution";
+
+// Remember an invite link or tagged link (?src=) before anything else runs.
+captureAttribution();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

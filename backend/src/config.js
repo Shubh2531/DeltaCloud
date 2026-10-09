@@ -57,6 +57,12 @@ export const config = {
     // Hard daily cap on AI explanations, to protect the bill. Beyond it, rules take over.
     dailyLimit: Number(process.env.INTEL_DAILY_LIMIT) || 2000,
   },
+  // Who can open the founder dashboard (comma-separated emails).
+  founderEmails: (process.env.FOUNDER_EMAILS || "olishubham435@gmail.com")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean),
+  publicSiteUrl: (process.env.PUBLIC_SITE_URL || "https://joindeltacloud.com").replace(/\/+$/, ""),
   smtp: {
     host: process.env.SMTP_HOST || "",
     port: Number(process.env.SMTP_PORT) || 2525,

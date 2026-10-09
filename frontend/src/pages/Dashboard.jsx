@@ -6,6 +6,7 @@ import FeedBadge from "../components/FeedBadge";
 import PriceList from "../components/PriceList";
 import TradingViewChart from "../components/TradingViewChart";
 import OrbCard from "../components/OrbCard";
+import InviteCard from "../components/InviteCard";
 import PacingCard from "../components/PacingCard";
 import Disclaimer from "../components/Disclaimer";
 import { useNews } from "../hooks/useNews";
@@ -71,6 +72,7 @@ export default function Dashboard() {
 
         <div style={{ display: "grid", gap: 18 }}>
           <OrbCard />
+          <InviteCard />
           <div className="card">
             <h2>Markets</h2>
             <PriceList />

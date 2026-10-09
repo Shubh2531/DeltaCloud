@@ -16,6 +16,7 @@ const Journal = lazy(() => import("./pages/Journal"));
 const News = lazy(() => import("./pages/News"));
 const Insights = lazy(() => import("./pages/Insights"));
 const Intelligence = lazy(() => import("./pages/Intelligence"));
+const Founder = lazy(() => import("./pages/Founder"));
 const Compounding = lazy(() => import("./pages/Compounding"));
 const Settings = lazy(() => import("./pages/Settings"));
 
@@ -33,6 +34,8 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        {/* Invite links: the code was already saved on page load; send them to sign up. */}
+        <Route path="/r/:code" element={<Navigate to="/register" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
@@ -51,7 +54,9 @@ export default function App() {
         <Route path="/ai-advisor" element={<Navigate to="/insights" replace />} />
         <Route path="/compounding" element={<Compounding />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/founder" element={<Founder />} />
       </Route>
+      <Route path="/r/:code" element={<Navigate to="/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

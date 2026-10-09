@@ -19,6 +19,8 @@ test("routes and services load", { skip: !installed && "packages not installed" 
     "../src/routes/paper.routes.js",
     "../src/routes/news.routes.js",
     "../src/routes/intel.routes.js",
+    "../src/routes/growth.routes.js",
+    "../src/services/growth.js",
     "../src/routes/auth.routes.js",
     "../src/services/prices.js",
     "../src/services/intel.js",
