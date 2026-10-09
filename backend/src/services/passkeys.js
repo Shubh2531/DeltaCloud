@@ -75,7 +75,9 @@ export async function registrationOptions(user) {
     userID: new TextEncoder().encode(String(user._id)),
     attestationType: "none",
     excludeCredentials: (user.passkeys || []).map((p) => ({ id: p.credId, transports: p.transports })),
-    authenticatorSelection: { residentKey: "required", userVerification: "required" },
+    // Built-in face or fingerprint sensor only (Face ID, Touch ID, Android fingerprint,
+    // Windows Hello): no "use another phone" QR codes and no USB security keys.
+    authenticatorSelection: { residentKey: "required", userVerification: "required", authenticatorAttachment: "platform" },
   });
   return { options, challengeToken: signChallenge(options.challenge, "register", user._id) };
 }
@@ -100,7 +102,7 @@ export async function finishRegistration(user, { response, challengeToken }, ua)
   consume(challenge);
   const { credential } = verification.registrationInfo;
   const credId = String(credential.id);
-  if ((user.passkeys || []).some((p) => p.credId === credId)) return user.passkeys;
+  if ((user.passkeys || []).some((p) => p.credId === credId)) return credId;
   user.passkeys.push({
     credId,
     publicKey: Buffer.from(credential.publicKey),
@@ -109,14 +111,20 @@ export async function finishRegistration(user, { response, challengeToken }, ua)
     name: deviceName(ua),
   });
   await user.save();
-  return user.passkeys;
+  return credId;
 }
 
 /* ---------------- Signing in with Face ID (authentication) ---------------- */
 
-export async function authenticationOptions() {
-  // No account list: the device offers whichever DeltaCloud passkey it holds.
-  const options = await generateAuthenticationOptions({ rpID, userVerification: "required" });
+// credentialId: the passkey this device saved when Face ID was turned on. Naming it sends the
+// browser straight to this device's face or fingerprint prompt, with no QR-code chooser.
+export async function authenticationOptions(credentialId) {
+  const id = typeof credentialId === "string" && /^[A-Za-z0-9_-]{16,512}$/.test(credentialId) ? credentialId : null;
+  const options = await generateAuthenticationOptions({
+    rpID,
+    userVerification: "required",
+    ...(id ? { allowCredentials: [{ id, transports: ["internal"] }] } : {}),
+  });
   return { options, challengeToken: signChallenge(options.challenge, "login") };
 }
 
