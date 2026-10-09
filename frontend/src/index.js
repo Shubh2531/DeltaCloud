@@ -8,6 +8,7 @@ import { MarketProvider } from "./context/MarketContext";
 
 import "./styles/index.css";
 import "./styles/future.css";
+import "./styles/settings.css";
 import { captureAttribution } from "./lib/attribution";
 
 // Remember an invite link or tagged link (?src=) before anything else runs.
