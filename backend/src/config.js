@@ -32,10 +32,13 @@ export const config = {
   refreshSecret,
   accessTtl: "15m",
   refreshTtl: "7d",
-  clientOrigins: (
+  // The official site is always allowed, so moving domains never depends on a dashboard setting.
+  clientOrigins: [
     process.env.CLIENT_ORIGINS ||
-    "http://localhost:3000,http://localhost:3001,capacitor://localhost,http://localhost,https://localhost"
-  )
+      "http://localhost:3000,http://localhost:3001,capacitor://localhost,http://localhost,https://localhost",
+    "https://joindeltacloud.com,https://www.joindeltacloud.com,https://deltacloud-55h.pages.dev",
+  ]
+    .join(",")
     .split(",")
     .map((s) => s.trim().replace(/\/.*$/, (m) => (m.startsWith("//") ? m : "")))
     .map((s) => s.replace(/^([a-z][a-z0-9+.-]*:\/\/[^/]+).*$/i, "$1").toLowerCase())
