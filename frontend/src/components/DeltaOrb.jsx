@@ -157,6 +157,62 @@ function labelTexture(text, color) {
   return t;
 }
 
+// The brand mark itself (Δ), drawn crisp and glowing so it reads instantly no matter
+// how the orb is rotated — a camera-facing sprite rather than a 3D shape, since a 3D
+// triangle only reads as "the Δ" from certain angles and this has to be recognizable
+// the instant someone sees it, not just on a good frame.
+function deltaMarkTexture() {
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 256;
+  const g = c.getContext("2d");
+  if (g) {
+    const cx = 128;
+    const cy = 150;
+    const size = 92;
+    const tri = (s) => {
+      g.beginPath();
+      g.moveTo(cx, cy - s);
+      g.lineTo(cx - s * 0.92, cy + s * 0.82);
+      g.lineTo(cx + s * 0.92, cy + s * 0.82);
+      g.closePath();
+    };
+
+    // soft halo behind the mark
+    const halo = g.createRadialGradient(cx, cy - 6, 6, cx, cy - 6, 150);
+    halo.addColorStop(0, "rgba(201, 210, 255, 0.55)");
+    halo.addColorStop(1, "rgba(201, 210, 255, 0)");
+    g.fillStyle = halo;
+    g.fillRect(0, 0, 256, 256);
+
+    // glassy fill
+    tri(size);
+    const fill = g.createLinearGradient(cx, cy - size, cx, cy + size);
+    fill.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+    fill.addColorStop(1, "rgba(139, 123, 255, 0.2)");
+    g.fillStyle = fill;
+    g.fill();
+
+    // crisp outer edge
+    tri(size);
+    g.lineWidth = 8;
+    g.strokeStyle = "rgba(255, 255, 255, 0.98)";
+    g.shadowColor = "rgba(180, 190, 255, 0.9)";
+    g.shadowBlur = 18;
+    g.stroke();
+
+    // an inner edge, smaller, for a faceted two-layer look
+    g.shadowBlur = 0;
+    tri(size * 0.52);
+    g.lineWidth = 3;
+    g.strokeStyle = "rgba(255, 255, 255, 0.55)";
+    g.stroke();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.needsUpdate = true;
+  return t;
+}
+
 export default function DeltaOrb({ reading, spike = 0, label = "Delta Orb" }) {
   const mountRef = useRef(null);
   const live = useRef({ reading, spike });
@@ -209,6 +265,26 @@ export default function DeltaOrb({ reading, spike = 0, label = "Delta Orb" }) {
     const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.38, 1), coreMat);
     world.add(core);
 
+    /* A soft glow behind the mark, and the Δ mark itself — the first thing anyone
+       should recognize. Both are camera-facing sprites, so they read clearly at every
+       rotation instead of only from a lucky angle. */
+    const glowTex = glowTexture();
+    const markGlowMat = new THREE.SpriteMaterial({
+      map: glowTex, color: PALETTE.flatB.clone(), transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    const markGlow = new THREE.Sprite(markGlowMat);
+    markGlow.scale.set(1.3, 1.3, 1);
+    world.add(markGlow);
+
+    const markMat = new THREE.SpriteMaterial({
+      map: deltaMarkTexture(), color: 0xffffff, transparent: true, opacity: 0.9,
+      blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false,
+    });
+    const mark = new THREE.Sprite(markMat);
+    mark.scale.set(0.58, 0.58, 1);
+    mark.renderOrder = 5;
+    world.add(mark);
+
     /* Dust halo */
     const COUNT = 1400;
     const pos = new Float32Array(COUNT * 3);
@@ -236,7 +312,6 @@ export default function DeltaOrb({ reading, spike = 0, label = "Delta Orb" }) {
     world.add(new THREE.Points(dustGeo, dustMat));
 
     /* Market nodes, each on its own tilted orbit */
-    const glowTex = glowTexture();
     const nodes = Array.from({ length: 6 }, (_, i) => {
       const pivot = new THREE.Group();
       pivot.rotation.set(0.35 + (i % 3) * 0.32 - 0.3, i * 0.9, (i % 2 ? 1 : -1) * 0.25);
@@ -352,6 +427,13 @@ export default function DeltaOrb({ reading, spike = 0, label = "Delta Orb" }) {
       core.rotation.x += dt * (0.3 + energy * 2.2);
       core.rotation.y += dt * (0.45 + energy * 2.8);
       coreMat.opacity = 0.2 + energy * 0.35 + pulse * 0.3;
+
+      // the mark: a slow confident pulse, brighter and tighter the more the market moves
+      markGlowMat.color.lerp(targetB, 0.04);
+      markGlowMat.opacity = 0.35 + energy * 0.3 + pulse * 0.4;
+      markGlow.scale.setScalar(1.25 + Math.sin(clock * 1.1) * 0.05 + pulse * 0.25);
+      mark.scale.setScalar(0.58 + Math.sin(clock * 1.6) * 0.015 + pulse * 0.12);
+      markMat.opacity = 0.82 + pulse * 0.18;
 
       // drag with inertia, otherwise slow auto-spin
       drag.ry += drag.vy + (drag.on ? 0 : dt * 0.12);
