@@ -31,7 +31,9 @@ jobs:
           CI: "false"
           # Set REACT_APP_API_BASE_URL under Settings > Secrets and variables > Actions > Variables
           REACT_APP_API_BASE_URL: ${{ vars.REACT_APP_API_BASE_URL }}
-          PUBLIC_URL: ${{ vars.PUBLIC_URL }}
+          # The site is served at the root of https://joindeltacloud.com (custom domain),
+          # so assets load from "/" rather than "/DeltaCloud".
+          PUBLIC_URL: ""
       - run: cp build/index.html build/404.html   # single-page-app fallback
       - uses: actions/upload-pages-artifact@v3
         with: { path: frontend/build }
