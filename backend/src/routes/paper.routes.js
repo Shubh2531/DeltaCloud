@@ -3,7 +3,8 @@ import PaperAccount, { STARTING_CASH } from "../models/PaperAccount.js";
 import TradeLog from "../models/TradeLog.js";
 import { requireAuth } from "../middleware/auth.js";
 import { feed } from "../services/feed.js";
-import { isSymbol } from "../lib/symbols.js";
+import { isSymbol, isCrypto } from "../lib/symbols.js";
+import { tradePrice, PriceError } from "../services/prices.js";
 import { parseQty } from "../lib/validators.js";
 import { executeOrder, TradeError } from "../lib/paperMath.js";
 import {
@@ -81,8 +82,8 @@ const journalCtx = (account) => ({ cashAfter: account.cash, mode: feed.mode });
 // latest snapshot. Saves and returns true only when something actually changed, so routes
 // that don't need to re-read prices (like placing a spot order) can skip this.
 async function settleAccount(account) {
-  const prices = {};
-  for (const [symbol, v] of Object.entries(feed.snapshot().prices)) prices[symbol] = v.c;
+  // Every coin, not just the featured ones pushed to browsers. Leverage is crypto-only.
+  const prices = feed.allPrices();
   const result = settleLiquidations(
     { cash: account.cash, leveragePositions: account.leveragePositions.map((p) => p.toObject?.() ?? p) },
     prices
@@ -99,7 +100,7 @@ async function settleAccount(account) {
 }
 
 const view = (account) => {
-  const prices = feed.snapshot().prices;
+  const prices = feed.allPrices();
   return {
     startingCash: account.startingCash,
     cash: account.cash,
@@ -119,7 +120,7 @@ const view = (account) => {
       })),
     leverageOptions: LEVERAGE_OPTIONS,
     leveragePositions: account.leveragePositions.map((p) => {
-      const mark = prices[p.symbol]?.c;
+      const mark = prices[p.symbol];
       const priced = Number.isFinite(mark);
       const markPrice = priced ? mark : p.entryPrice;
       const pnl = positionPnl(p, markPrice);
@@ -180,8 +181,14 @@ router.post(
     if (qty === null) return fail(res, 400, "Enter a valid quantity.");
 
     // The server decides the price. A client-supplied price is never trusted.
-    const price = feed.getPrice(symbol);
-    if (!price) return fail(res, 503, "Prices are unavailable right now. Try again in a moment.");
+    // Stocks only fill while the US market is open.
+    let price;
+    try {
+      price = await tradePrice(symbol);
+    } catch (err) {
+      if (err instanceof PriceError) return fail(res, err.status, err.message);
+      throw err;
+    }
 
     const account = await getAccount(req.userId);
     let result;
@@ -226,6 +233,7 @@ router.post(
     const marginUsd = Number(req.body?.marginUsd);
     const leverage = Number(req.body?.leverage);
     if (!isSymbol(symbol)) return fail(res, 400, "Choose a supported market.");
+    if (!isCrypto(symbol)) return fail(res, 400, "Leverage practice is available for crypto only.");
 
     const price = feed.getPrice(symbol);
     if (!price) return fail(res, 503, "Prices are unavailable right now. Try again in a moment.");
